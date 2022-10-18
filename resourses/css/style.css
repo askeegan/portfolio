@@ -1,0 +1,602 @@
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    line-height: 1.1;
+    font-weight: 700;
+}
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+}
+
+.button {
+    color: #000;
+    text-decoration: none;
+    padding: 10px 10px;
+    border: 1px solid #000;
+    transition: 0.5s;
+    background-color: #fff;
+    font-weight: 500;
+}
+
+.button:hover {
+    color: #fff;
+    background-color: #000;
+}
+
+/*Header Page*/
+
+#body-home {
+    background-image: url(/resourses/images/hero-banner/astro-def.png);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    background-color: #000;
+}
+
+
+#header-1 {
+    display: flex;
+    align-items: center;   
+}
+
+#navbar-1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 200px;
+    margin-top: 40px;
+}
+
+#navbar-1 li {
+    list-style: none;
+}
+
+#navbar-1 li a {
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 400;
+    color: #9d9d9d;
+    transition: 0.3s;
+    border-right: 1px solid #fff;
+    padding: 0 20px;
+    text-shadow: 0 1px 3px #000;
+}
+
+#navbar-1 .a-4 {
+    border-right: none;
+}
+
+#navbar-1 li a:hover {
+    color: #fff;
+    font-weight: bold;
+}
+
+#mobile {
+    display: none;
+    align-items: center;
+}
+
+#close {
+    display: none;
+}
+
+#hero-banner {
+    color: #fff;
+    width: 100%;
+    padding: 100px 80px;
+}
+
+#hero-banner h1 {
+    font-size: 70px;
+    text-shadow: 0 0px 4px #000;
+    padding: 90px 0 0 50px;
+    margin-left: 60px;
+    font-weight: 900;
+}
+
+/*Work Page*/
+
+#header-2 {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    z-index: 999;
+    position: sticky;
+    padding-bottom: 40px;
+    top: 0;
+    left: 0;
+}
+ 
+#navbar-2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 200px;
+    margin-top: 40px;
+}
+
+#navbar-2 li {
+    list-style: none;
+}
+
+#navbar-2 li a {
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 400;
+    color: #000;
+    transition: 0.3s;
+    border-right: 1px solid #000;
+    padding: 0 20px;
+}
+
+#navbar-2 .a-4 {
+    border-right: none;
+}
+
+#navbar-2 li a:hover {
+    color: #000;
+    font-weight: bold;
+}
+
+#description {
+    width: 100%;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding-bottom: 20px;
+    padding-top: 20px;
+}
+
+#description h2 {
+    border-left: #000 1px solid;
+    border-right: #000 1px solid;
+    padding: 0 25px;
+    margin: 20px 0;
+}
+
+#work {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 40px 90px;
+}
+
+#work .container {
+    display: flex;
+    margin: 0 70px;
+    height: 600px;
+    width: auto;
+    position: relative;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container .example-text {
+    position: absolute;
+    width: 70%;
+    top: 190px;
+    background-color: #fff;
+    margin: 10px 90px;
+    padding: 10px 30px; 
+}
+
+.container .example-text h4 {
+    padding: 20px 0;
+}
+
+.container .example-text h3 {
+    padding: 0 0 20px 0;
+}
+
+.container .example-text  p {
+    line-height: 35px;
+    padding-bottom: 20px;
+}
+
+.container .example-text .button {
+    color: #000;
+    text-decoration: none;
+    padding: 10px;
+    border: 1px solid #000;
+    transition: 0.5s;
+}
+
+.container .example-text .button:hover {
+    color: #fff;
+    background-color: #000;
+}
+
+.container img {
+   width: 100%;
+   height: 250px;
+   filter: grayscale(100%) contrast(130%) brightness(50%);
+   transition: 1s;
+}
+
+.container img:hover {
+    filter: none;
+}
+
+footer {
+    margin: 30px 0;
+    padding: 30px 0;
+    text-align: center;
+}
+
+footer .copy {
+    padding-right: 10px;
+   border-right: 1px solid #000;
+}
+
+footer a {
+    color: rgb(0, 13, 255);
+}
+
+/* About Page */
+
+#about-me {
+    display: flex;
+    padding-top: 30px;
+    margin: 0 90px;
+    align-items:flex-start;
+}
+
+#about-me .column-des {
+   width: 50%;
+   padding-top: 40px; 
+   margin: 0px 50px;
+}
+
+#about-me .column-des h3 {
+    padding-top: 5px;
+    padding-bottom: 20px;
+}
+
+#about-me .column-des p {
+    line-height: 25px;
+}
+
+#about-me .column-des a {
+    color: rgb(0, 13, 255);;
+}
+
+#about-me .column-img  {
+   width: 50%; 
+   padding: 0 0 80px 0;
+   margin: 0 70px;
+}
+
+#about-me .column-img img {
+    width: 100%;
+    height: auto;
+}
+
+/*Contact Page*/
+
+#form-details {
+    display: flex;
+    padding-top: 30px;
+    margin: 0 90px;
+}
+
+#form-details form {
+    width: 50%;
+    margin: 0px 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+#form-details form input,
+#form-details form textarea {
+    width: 100%;
+    padding: 12px 15px;
+    outline: none;
+    margin-bottom: 20px;
+    border: 1px solid #000;
+}
+
+#form-details .contact-details {
+    width: 50%;
+    padding-top: 20px;
+}
+
+#form-details .contact-details .personal i {
+    width: 100%;
+    padding-bottom: 20px;
+    padding-left: 10px;
+}
+
+#form-details .contact-details .personal i span {
+    padding-left: 20px;
+    font-weight: 100;
+}
+
+.contact-details h3 {
+    padding-top: 10px;
+    padding-bottom: 30px;
+    font-size: 30px;
+}
+
+.contact-details .social {
+    padding-left: 20px;
+    font-size: 16px;
+}
+
+.contact-details .social a {
+    padding-right: 20px;
+    color: #000;
+}
+
+.contact-details .social a:hover {
+    color: rgb(0, 13, 255);
+}
+
+/* Media Query Starts */
+
+@media (max-width:799px) {
+
+
+    /* Home Page */
+
+    #body-home {
+        height: 100%;
+        background-position: 100% 10%;
+    }
+
+    #navbar-1 {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        position: fixed;
+        top: 0px;
+        right: -300px;
+        height: 30vh;
+        width: 260px;
+        background-color: #000;      
+        padding: 80px 0 0 10px;
+        transition: 0.3s;
+    }
+
+    #navbar-1.active {
+        right: 0;
+    }
+
+    #navbar-1 li {
+        margin-bottom: 40px;
+        margin-left: 50px;
+    }
+
+    #navbar-1 li a {
+        border-right: none;
+    }
+
+    #mobile {
+        display: flex;
+        align-items: center;
+    }
+
+    #mobile i {
+        color: #fff;
+        font-size: 40px;
+        margin-left: 700px;
+        margin-top: 40px;
+    }
+
+    #close {
+        display: initial;
+        position: absolute;
+        top: 0;
+        right: 39px;
+        color: #9d9d9d;
+        font-size: 40px;
+        text-shadow: 0 1px 3px #000;
+    }
+
+    #hero-banner {
+        color: #fff;
+        width: 100%;
+        padding: 80px 0px 0px 0px;
+    }
+    
+    #hero-banner h1 {
+        padding: 200px 0 0 0px;
+        margin-left: 40px;
+        font-weight: 900;
+    }
+
+    /* Work Page */
+
+    #navbar-2 {
+       margin-left: 63px;
+    }
+
+    #work {
+       margin: 20px;
+    } 
+
+    #work .container {
+        margin: 20px;
+        height: 700px;
+    }
+
+    /* About Page */
+
+    #about-me {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%; 
+        margin: 0;
+        padding: 20px 40px;
+    }
+    
+    #about-me .column-des {
+       width: 100%; 
+       padding-top: 10px; 
+    }
+
+    #about-me .column-img  {
+        width: 100%; 
+        padding: 50px 0 20px 0;
+        margin: 0 70px;
+     }
+     
+     #about-me .column-img img {
+         width: 100%;
+         height: auto;
+     }
+
+    /* Contact Page */
+
+    #form-details {
+        padding-top: 20px;
+        margin: 0px 0px 0px 0; 
+    }
+    
+    #form-details form {
+        margin: 0px 30px;
+    }
+
+    #form-details .contact-details {
+        width: 60%;
+    }
+
+    #form-details .contact-details .personal i {
+        padding-right: 0px;
+    }
+
+    #form-details .contact-details .personal i span {
+        padding-left: 10px;
+        font-weight: 100;
+    }
+}
+
+@media (max-width: 477px) {
+
+/* Home Page */
+
+#body-home {
+    background-image: url(/resourses/images/hero-banner/astro-def.png);
+    height: 100%;
+    width: 100%;
+    background-repeat: no-repeat;
+    background-position: 92% 92%;
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+#navbar {
+    height: 50vh;
+    width: 300px;
+}
+
+#navbar li {
+    margin-left: 10px;
+}
+
+#navbar li a {
+    font-size: 30px;
+}
+
+#mobile i {
+    font-size: 60px;
+    margin-right: 23px;
+}
+
+#close {
+    right: 41px;
+    font-size: 60px;
+}
+
+#hero-banner h1 {
+    font-size: 120px;
+    padding: 400px 0 0 0px;
+    margin-left: 30px;
+    font-weight: 900;
+}
+
+/*Work Page*/
+
+#header-2 {
+    padding-bottom: 0px;
+}
+
+#navbar-2 {
+    margin: 0px;
+    padding: 10px 0 0 20px ;
+}
+
+#navbar-2 li {
+    padding: 0;
+    margin: 0;
+}
+
+#navbar-2 li a {
+    font-size: 10px;
+    border-right: none;
+    padding: 10px;
+    margin: 0px;
+}
+
+#work {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 30px 0px 0px 0px;
+}
+
+#work .container {
+    margin: 0 10px 20px 10px;
+    height: 550px;
+    
+}
+
+.container .example-text {
+    width: 90%;
+    top: 170px;
+}
+
+/* Contact Page */
+
+#form-details {
+    display: flex;
+    flex-direction: column;
+    padding-top: 10px;
+    margin: 0 0px;
+}
+
+#form-details form {
+    width: 89%;
+    margin: 0 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+#form-details .contact-details {
+    margin: 20px;
+}
+
+#form-details .contact-details i {
+    margin: 0 20px 0 0;
+}
+
+#form-details .contact-details .personal i span {
+        padding-left: 5px;
+        font-weight: 100;
+    }
+    
+}
