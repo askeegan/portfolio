@@ -291,6 +291,14 @@
 
   /* Mobile capabilities stay in view while scroll advances the active row. */
   @media(max-width:720px){
+    /* Keep clipping off the sticky ancestor chain; other sections retain their own clips. */
+    html,body{overflow-x:visible;}
+    #approach{overflow:visible;}
+    #approach .do-head{overflow-x:clip;
+      margin-left:calc(-1 * max(var(--gutter),env(safe-area-inset-left,0px)));
+      margin-right:calc(-1 * max(var(--gutter),env(safe-area-inset-right,0px)));
+      padding-left:max(var(--gutter),env(safe-area-inset-left,0px));
+      padding-right:max(var(--gutter),env(safe-area-inset-right,0px));}
     #approach .cap-scroll{height:calc(var(--cap-list-height,384px) + var(--cap-distance,640px));}
     #approach .do-list{position:sticky;top:calc(var(--nav-height,64px) + 8px);}
     #approach .do-item{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
@@ -469,7 +477,7 @@
   .about-me{grid-column:5/7;grid-row:1/3;justify-self:center;align-self:end;
     width:clamp(96px,10vw,128px);max-width:100%;margin:0;}
   .about-portrait-motion{will-change:transform;}
-  .about-portrait{width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;
+  .about-portrait{width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;object-position:center top;
     display:block;background:var(--surface);}
   .about-me-cap{display:block;margin-top:8px;font-family:var(--font-mono);font-size:10px;letter-spacing:.5px;
     line-height:1.7;color:var(--muted);text-transform:uppercase;}
@@ -970,6 +978,143 @@
   <form class="cbot-input" id="cbotForm"><input id="cbotInput" maxlength="1000" type="text" placeholder="Ask about stack, availability…" aria-label="Your question for Nova" enterkeyhint="send" autocomplete="off"><button type="submit">Send</button></form>
 </div>
 
+<script>
+// Media starts independently of the optional Lenis dependency below.
+(function(){
+  var motion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  function within(video,margin){
+    var r=video.getBoundingClientRect();
+    return r.width>0 && r.height>0 && r.bottom> -margin && r.top<window.innerHeight+margin;
+  }
+  var states=[].slice.call(document.querySelectorAll('[data-video]')).map(function(video){
+    var sources=[].slice.call(video.querySelectorAll('source'));
+    if(video.dataset.src) sources.push(video);
+    return {video:video,kind:video.dataset.video,sources:sources,visible:within(video,0),
+      near:within(video,600),loaded:false,requested:false,attempt:0,played:false,failure:null};
+  });
+  function primaryWaiting(){
+    return states.some(function(s){return s.kind!=='bubble' && s.visible && !s.played && !s.failure;});
+  }
+  function preload(state,value){
+    if(state.video.preload!==value) state.video.preload=value;
+  }
+  function prepare(state,value){
+    preload(state,value);
+    if(state.loaded) return;
+    state.video.muted=true;state.video.defaultMuted=true;state.video.playsInline=true;
+    state.sources.forEach(function(source){source.src=source.dataset.src;});
+    state.loaded=true;
+    state.video.load();
+  }
+  function pause(state){
+    if(state.requested || !state.video.paused){
+      state.attempt++;state.requested=false;state.video.pause();
+      state.video.dataset.playbackState='paused';
+    }
+  }
+  function requestPlay(state){
+    if(state.requested || state.failure) return;
+    state.requested=true;
+    var attempt=++state.attempt;
+    state.video.dataset.playbackState='loading';
+    function rejected(error){
+      // A visibility change or source removal can cancel an older play promise.
+      if(attempt!==state.attempt) return;
+      state.requested=false;state.failure=error && error.name || 'PlaybackError';
+      state.video.dataset.playbackState=state.failure==='NotAllowedError' ? 'blocked' : 'error';
+      syncAll();
+    }
+    try{
+      var promise=state.video.play();
+      if(promise && promise.then){
+        promise.then(function(){
+          if(attempt!==state.attempt) return;
+          state.played=true;state.video.dataset.playbackState='playing';syncAll();
+        },rejected);
+      }
+    }catch(error){rejected(error);}
+  }
+  function sync(state){
+    if(motion.matches){
+      pause(state);preload(state,'none');
+      if(state.loaded){
+        state.sources.forEach(function(source){source.removeAttribute('src');});
+        state.loaded=false;state.played=false;state.failure=null;state.video.load();
+      }
+      return;
+    }
+    if(document.hidden){pause(state);preload(state,'none');return;}
+    if(!state.visible){
+      pause(state);
+      if(state.kind==='about' && state.near && !primaryWaiting()) prepare(state,'metadata');
+      else preload(state,'none');
+      return;
+    }
+    // Keep the small Nova loop from competing with a visible primary video's first start.
+    if(state.kind==='bubble' && !state.loaded && primaryWaiting()) return;
+    prepare(state,'auto');
+    requestPlay(state);
+  }
+  function syncAll(){states.forEach(sync);}
+  function visibility(state,visible){
+    if(visible && !state.visible) state.failure=null;
+    state.visible=visible;
+  }
+  states.forEach(function(state){
+    state.video.addEventListener('playing',function(){
+      if(motion.matches || document.hidden || !state.visible){pause(state);return;}
+      state.played=true;state.video.dataset.playbackState='playing';syncAll();
+    });
+    state.video.addEventListener('error',function(){
+      state.attempt++;state.requested=false;state.failure='MediaError';
+      state.video.dataset.playbackState='error';syncAll();
+    });
+  });
+  if('IntersectionObserver' in window){
+    var visibleObserver=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var state=states.find(function(s){return s.video===entry.target;});
+        visibility(state,entry.isIntersecting);
+      });
+      syncAll();
+    },{threshold:0});
+    states.forEach(function(state){visibleObserver.observe(state.video);});
+    // Metadata only ahead of About; playback still requires actual viewport visibility.
+    var prepareObserver=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var state=states.find(function(s){return s.video===entry.target;});
+        state.near=entry.isIntersecting;
+      });
+      syncAll();
+    },{rootMargin:'600px 0px',threshold:0});
+    states.filter(function(s){return s.kind==='about';}).forEach(function(s){prepareObserver.observe(s.video);});
+  } else {
+    // Event-driven visibility fallback for browsers without IntersectionObserver.
+    var queued=false;
+    function measure(){
+      queued=false;
+      states.forEach(function(s){visibility(s,within(s.video,0));s.near=within(s.video,600);});
+      syncAll();
+    }
+    function schedule(){if(!queued){queued=true;requestAnimationFrame(measure);}}
+    window.addEventListener('scroll',schedule,{passive:true});
+    window.addEventListener('resize',schedule);
+  }
+  motion.addEventListener('change',syncAll);
+  document.addEventListener('visibilitychange',syncAll);
+  // Retry an explicit autoplay denial only in response to a real user gesture.
+  function gesture(){
+    if(motion.matches || document.hidden) return;
+    states.forEach(function(state){
+      if(state.visible && state.failure==='NotAllowedError'){state.failure=null;sync(state);}
+    });
+  }
+  document.addEventListener('click',gesture);
+  document.addEventListener('keydown',gesture);
+  syncAll();
+})();
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
 <script>
 (function(){
@@ -1121,41 +1266,6 @@
   if('ResizeObserver' in window){new ResizeObserver(updateNavHeight).observe(nav);}
   window.addEventListener('resize',updateNavHeight);
   setMenu(false);updateNavHeight();
-
-  // Load videos only when enabled and nearby; pause in background tabs and reduced motion.
-  var videoStates=[];
-  document.querySelectorAll('[data-video]').forEach(function(video){
-    var state={video:video,near:false};
-    videoStates.push(state);
-    if('IntersectionObserver' in window){
-      var observer=new IntersectionObserver(function(entries){state.near=entries[0].isIntersecting;syncVideo(state);},{rootMargin:'100px'});
-      observer.observe(video);
-    } else {state.near=true;}
-  });
-  function syncVideo(state){
-    var video=state.video;
-    var enabled=!motionQuery.matches;
-    var sources=[].slice.call(video.querySelectorAll('source'));
-    if(video.dataset.src) sources.push(video);
-    if(!enabled){
-      video.pause();
-      var removed=false;
-      sources.forEach(function(source){if(source.hasAttribute('src')){source.removeAttribute('src');removed=true;}});
-      if(removed) video.load();
-      return;
-    }
-    if(!state.near || document.hidden){video.pause();return;}
-    var added=false;
-    sources.forEach(function(source){if(!source.hasAttribute('src')){source.src=source.dataset.src;added=true;}});
-    if(added) video.load();
-    var playing=video.play();
-    if(playing && playing.catch) playing.catch(function(){});
-  }
-  function syncVideos(){videoStates.forEach(syncVideo);}
-  mobileQuery.addEventListener('change',syncVideos);
-  motionQuery.addEventListener('change',syncVideos);
-  document.addEventListener('visibilitychange',syncVideos);
-  syncVideos();
 
   // Render the favicon using the navbar's loaded Archivo face, weight, width and tracking.
   function renderBrandFavicon(){
