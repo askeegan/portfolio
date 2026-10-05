@@ -1011,13 +1011,26 @@
     if(!list) return;
     var track=list.closest('.cap-scroll');
     var rows=[].slice.call(list.querySelectorAll('.do-item')), active=-1, queued=0, distance=640;
+    var measuredWidth=null, measuredOrientation=null;
+    function setMeasurement(name,value){
+      if(track.style.getPropertyValue(name)!==value){track.style.setProperty(name,value);}
+    }
     function measure(){
       if(mobileQuery.matches){
-        distance=Math.max(320,window.innerHeight*0.22*rows.length);
-        track.style.setProperty('--cap-list-height',list.offsetHeight+'px');
-        track.style.setProperty('--cap-distance',distance+'px');
+        var width=window.innerWidth;
+        var orientation=window.screen && window.screen.orientation ? window.screen.orientation.type : window.orientation;
+        // Browser-bar height changes must not resize the scroll track or shift its steps.
+        if(width!==measuredWidth || orientation!==measuredOrientation){
+          distance=Math.max(320,window.innerHeight*0.22*rows.length);
+          measuredWidth=width;measuredOrientation=orientation;
+        }
+        setMeasurement('--cap-list-height',list.offsetHeight+'px');
+        setMeasurement('--cap-distance',distance+'px');
       } else {
-        track.style.removeProperty('--cap-list-height');track.style.removeProperty('--cap-distance');
+        measuredWidth=null;measuredOrientation=null;
+        ['--cap-list-height','--cap-distance'].forEach(function(name){
+          if(track.style.getPropertyValue(name)){track.style.removeProperty(name);}
+        });
       }
       schedule();
     }
@@ -1042,6 +1055,10 @@
     }
     window.addEventListener('scroll',schedule,{passive:true});
     window.addEventListener('resize',measure);
+    window.addEventListener('orientationchange',measure);
+    if(window.screen && window.screen.orientation && window.screen.orientation.addEventListener){
+      window.screen.orientation.addEventListener('change',measure);
+    }
     mobileQuery.addEventListener('change',measure);
     if('ResizeObserver' in window){new ResizeObserver(measure).observe(list);}
     if(document.fonts && document.fonts.ready){document.fonts.ready.then(measure);}
