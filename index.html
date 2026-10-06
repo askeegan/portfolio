@@ -170,6 +170,12 @@
   .hero-bg::after{content:"";position:absolute;inset:0;
     background:radial-gradient(130% 120% at 50% 40%, transparent 52%, rgba(5,5,4,.4) 78%, var(--ink) 100%);}
   .hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+  /* Decorative videos never expose native playback UI or intercept clicks. */
+  video[data-video]{pointer-events:none;}
+  video[data-video]::-webkit-media-controls{display:none!important;}
+  video[data-video]::-webkit-media-controls-enclosure{display:none!important;}
+  video[data-video]::-webkit-media-controls-panel{display:none!important;}
+  video[data-video]::-webkit-media-controls-start-playback-button{display:none!important;}
   .hero-tint{position:absolute;inset:0;z-index:1;pointer-events:none;
     background:
       radial-gradient(120% 95% at 62% 8%, rgba(224,129,47,.1), transparent 58%),
@@ -727,7 +733,7 @@
 <header class="hero" id="top">
   <noscript><div class="fallback-nav"><a href="#work">Work</a><a href="#approach">Approach</a><a href="#about">About</a><a href="#contact">Contact</a></div></noscript>
   <div class="hero-bg"></div>
-  <video class="hero-video" data-video="hero" autoplay muted loop playsinline preload="none">
+  <video class="hero-video" data-video="hero" muted loop playsinline preload="none">
     <source data-src="video/banner.mp4" type="video/mp4">
   </video>
   <div class="hero-tint"></div>
@@ -893,7 +899,7 @@
 
 <section id="about" class="core">
   <div class="about-banner">
-    <video class="about-video" data-video="about" autoplay muted loop playsinline preload="none">
+    <video class="about-video" data-video="about" muted loop playsinline preload="none">
       <source data-src="video/about.mp4" type="video/mp4">
     </video>
     <h2 class="about-title" id="aboutTitle">Behind the work</h2>
@@ -970,7 +976,7 @@
   </div>
 </div></footer>
 
-<button class="cbot-launch" id="cbotLaunch" aria-label="Chat with Nova" aria-controls="cbotPanel" aria-expanded="false"><img src="img/nova-poster.jpg" alt="" width="400" height="400"><video data-video="bubble" data-src="video/bubble.mp4" poster="img/nova-poster.jpg" autoplay muted loop playsinline preload="none"></video></button>
+<button class="cbot-launch" id="cbotLaunch" aria-label="Chat with Nova" aria-controls="cbotPanel" aria-expanded="false"><img src="img/nova-poster.jpg" alt="" width="400" height="400"><video data-video="bubble" data-src="video/bubble.mp4" poster="img/nova-poster.jpg" muted loop playsinline preload="none"></video></button>
 <div class="cbot-panel" id="cbotPanel" role="dialog" aria-label="Chat with Nova" aria-hidden="true" inert tabindex="-1">
   <div class="cbot-head"><div><b>Nova</b></div><button class="cbot-close" id="cbotClose" aria-label="Close chat">✕</button></div>
   <div class="cbot-body" id="cbotBody" role="log" aria-live="polite" aria-relevant="additions" data-lenis-prevent></div>
@@ -1002,13 +1008,16 @@
   }
   function prepare(state,value){
     state.video.muted=true;state.video.defaultMuted=true;state.video.playsInline=true;
-    // Native muted autoplay is enabled only for controller-approved visible playback.
-    state.video.autoplay=value==='auto';
+    state.video.controls=false;
     preload(state,value);
-    if(state.loaded) return;
-    state.sources.forEach(function(source){source.src=source.dataset.src;});
-    state.loaded=true;
-    state.video.load();
+    var added=!state.loaded;
+    if(added){
+      state.sources.forEach(function(source){source.src=source.dataset.src;});
+      state.loaded=true;
+    }
+    // Arm native autoplay only with a source attached and visible playback approved.
+    if(state.video.autoplay!==(value==='auto')) state.video.autoplay=value==='auto';
+    if(added) state.video.load();
   }
   function pause(state){
     state.video.autoplay=false;
