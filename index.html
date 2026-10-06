@@ -727,7 +727,7 @@
 <header class="hero" id="top">
   <noscript><div class="fallback-nav"><a href="#work">Work</a><a href="#approach">Approach</a><a href="#about">About</a><a href="#contact">Contact</a></div></noscript>
   <div class="hero-bg"></div>
-  <video class="hero-video" data-video="hero" muted loop playsinline preload="none">
+  <video class="hero-video" data-video="hero" autoplay muted loop playsinline preload="none">
     <source data-src="video/banner.mp4" type="video/mp4">
   </video>
   <div class="hero-tint"></div>
@@ -893,7 +893,7 @@
 
 <section id="about" class="core">
   <div class="about-banner">
-    <video class="about-video" data-video="about" muted loop playsinline preload="none">
+    <video class="about-video" data-video="about" autoplay muted loop playsinline preload="none">
       <source data-src="video/about.mp4" type="video/mp4">
     </video>
     <h2 class="about-title" id="aboutTitle">Behind the work</h2>
@@ -970,7 +970,7 @@
   </div>
 </div></footer>
 
-<button class="cbot-launch" id="cbotLaunch" aria-label="Chat with Nova" aria-controls="cbotPanel" aria-expanded="false"><img src="img/nova-poster.jpg" alt="" width="400" height="400"><video data-video="bubble" data-src="video/bubble.mp4" poster="img/nova-poster.jpg" muted loop playsinline preload="none"></video></button>
+<button class="cbot-launch" id="cbotLaunch" aria-label="Chat with Nova" aria-controls="cbotPanel" aria-expanded="false"><img src="img/nova-poster.jpg" alt="" width="400" height="400"><video data-video="bubble" data-src="video/bubble.mp4" poster="img/nova-poster.jpg" autoplay muted loop playsinline preload="none"></video></button>
 <div class="cbot-panel" id="cbotPanel" role="dialog" aria-label="Chat with Nova" aria-hidden="true" inert tabindex="-1">
   <div class="cbot-head"><div><b>Nova</b></div><button class="cbot-close" id="cbotClose" aria-label="Close chat">✕</button></div>
   <div class="cbot-body" id="cbotBody" role="log" aria-live="polite" aria-relevant="additions" data-lenis-prevent></div>
@@ -1001,14 +1001,17 @@
     if(state.video.preload!==value) state.video.preload=value;
   }
   function prepare(state,value){
+    state.video.muted=true;state.video.defaultMuted=true;state.video.playsInline=true;
+    // Native muted autoplay is enabled only for controller-approved visible playback.
+    state.video.autoplay=value==='auto';
     preload(state,value);
     if(state.loaded) return;
-    state.video.muted=true;state.video.defaultMuted=true;state.video.playsInline=true;
     state.sources.forEach(function(source){source.src=source.dataset.src;});
     state.loaded=true;
     state.video.load();
   }
   function pause(state){
+    state.video.autoplay=false;
     state.interrupted=false;state.recoveryUsed=false;
     if(state.pending || state.playing || !state.video.paused){
       state.attempt++;state.pending=false;state.playing=false;state.video.pause();
@@ -1032,7 +1035,7 @@
   function playing(state){
     if(motion.matches || document.hidden || !state.visible){pause(state);return;}
     if(state.video.paused){interrupted(state);return;}
-    state.pending=false;state.playing=true;state.played=true;state.interrupted=false;
+    state.pending=false;state.playing=true;state.played=true;state.interrupted=false;state.failure=null;
     state.video.dataset.playbackState='playing';syncAll();
   }
   function requestPlay(state){
