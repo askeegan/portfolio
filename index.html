@@ -1627,71 +1627,180 @@
         input=document.getElementById('cbotInput');
     if(!launch||!panel) return;
 
-    // Knowledge base: each entry = keywords (k) + answer (a). Add lines here to teach it more.
+    // FAQ content only; id/label also identify ambiguous matches and test expectations.
+    // k = topic phrases, q = explicit question intent (higher priority), x = excluded phrases, exact = whole message.
     var KB=[
-      {k:['from scratch','build my','build a store','build me','can you build','can alex build','help me build','need a store','new store','new site','new website','create my','create a store','make me a store','set up a store','setup a store','ground up','start a store','get a store'],
-       a:"Absolutely. I build Shopify stores end to end, from a blank slate to launch: design, build, product setup, payments, apps and go-live. Tell me about yours at alejandrokeegandev@gmail.com."},
-      {k:['redesign','re-design','revamp','rebuild','refresh my','fix my','improve my','update my','migrate','migration','replatform','re-platform','move my','existing store','current store','already have'],
-       a:"Yes. I redesign and rebuild existing stores, migrate between platforms or themes, and tune them for speed and conversion. Send me the URL at alejandrokeegandev@gmail.com and I'll take a look."},
-      {k:['shopify','liquid',' theme','shopify plus',' plus','checkout','custom app','shopify app','metafield'],
-       a:"Yes, Shopify is home base: custom themes, Shopify Plus, checkout extensibility, custom apps and migrations. Whatever you need built, I can handle it."},
-      {k:['headless','hydrogen','next.js','nextjs','next js','react','storefront api','vercel','composable','jamstack'],
-       a:"Yes, I build headless storefronts with Next.js or Hydrogen on the Shopify Storefront API, deployed on Vercel. Fast, modern and fully custom."},
-      {k:['stack',' tech','technolog','skill',' tool','framework','what do you use','built with','work with','coding','code in','program'],
-       a:"I work across Shopify (Liquid, Storefront API, checkout extensibility) and headless with Next.js, React, TypeScript, Hydrogen, GraphQL, Tailwind and Vercel."},
-      {k:['klaviyo','subscription','integrat',' api ','quiz','bundle','loyalty','email flow','third party','third-party','plugin','automation',' apps'],
-       a:"Yes, I build custom features and integrations: subscriptions, quizzes, bundles, Klaviyo and email flows, and third-party APIs. Tell me what you need."},
-      {k:['cro','conversion','convert','performance',' speed','slow','faster','quicker','page speed','core web vitals','optimi','more sales','abandon','load time','loading'],
-       a:"Big focus for me. I build for conversion and speed: clean UX, fast load times, strong Core Web Vitals, and the details that turn visits into sales."},
-      {k:['available','availab','hire','hiring','open to','looking for work','for a job',' job','full-time','full time','part-time','contract','freelance','work with you','work together','take on','capacity','onboard'],
-       a:"I'm open to full-time and contract roles, plus freelance projects. Based in Bali (UTC+8), working worldwide. Email alejandrokeegandev@gmail.com to start."},
-      {k:['where','located','location','based','timezone','time zone','bali','indonesia','remote','what country',' hours','overlap'],
-       a:"I'm based in Bali, Indonesia (UTC+8) and work fully remote with teams and brands worldwide."},
-      {k:['experience','years','background','senior','team lead',' lead','how long have','expert',' level','junior','qualified','how good'],
-       a:"I'm a senior / lead developer: I've led development teams and shipped 50+ Shopify stores across wellness, beauty, jewellery and more."},
-      {k:[' work','portfolio','project','example',' site','case stud','built before','clients','brands','showcase','previous','past work','see your'],
-       a:"Take a look at Selected Work above: live builds include Rooted Vitamins, REHAUS, Larsson & Jennings and Plantwell, plus more linked stores."},
-      {k:['how long','timeline','turnaround','how fast','how quick','how soon',' days',' weeks','deadline','rush','asap','when can','delivery time'],
-       a:"Once scope and design are set, I can build and launch a full store in about 2 days. Larger custom builds take longer, and I quote that up front."},
-      {k:[' rate','price','pricing','cost','how much','budget','quote','charge',' fee','expensive','afford','payment',' pay ','invoice','deposit'],
-       a:"It depends on scope. Share what you need at alejandrokeegandev@gmail.com and I'll send a clear, fixed quote. No hourly surprises."},
-      {k:['process','how do you work','how does it work','what happens','steps','workflow','next step','get started','getting started','begin','kick off','kickoff','onboarding','how do we'],
-       a:"Simple: we scope the project and lock the price, I get the design ready, then build and launch. You review a live store before go-live."},
-      {k:['what do you do','services','service','what can you','what else','offer','help with','do you do','specialt','specialis','specializ'],
-       a:"I design and build Shopify and headless storefronts end to end: new builds, redesigns, migrations, CRO and performance, custom apps and ongoing care."},
-      {k:['support','maintenance','maintain','after launch','ongoing','retainer','look after','updates','manage my','care plan','keep it'],
-       a:"Yes, I can keep your store fast, fixed and improving after launch. Email alejandrokeegandev@gmail.com and we'll set up a care plan."},
-      {k:['why you','why alex','why hire','why work with','what makes','different','better than','stand out','special about','why should'],
-       a:"You deal directly with the senior developer writing the code, not an agency middle layer. Fast, senior builds, clear pricing, and a real focus on conversion."},
-      {k:['industr','niche','sector','wellness','beauty','skincare','supplement','jewel','fashion','cosmetic','ecommerce','e-commerce',' dtc','what brands','my industry'],
-       a:"I've built across wellness, beauty, skincare, supplements, jewellery and other DTC brands. The approach works for most product-based stores."},
-      {k:['contact','email','reach','get in touch','talk to','message you','connect','hire you',' call','whatsapp','how do i reach','your email'],
-       a:"Easiest is email: alejandrokeegandev@gmail.com. My LinkedIn and GitHub are in the footer too."},
-      {k:[' cv','resume','curriculum'],
-       a:"Happy to share my CV, just email alejandrokeegandev@gmail.com."},
-      {k:['english','spanish','do you speak','speak english',' german','what language','communicate'],
-       a:"I'm Spanish (native), speak fluent English, and some German. Clear communication from kickoff to launch is a priority for me."},
-      {k:['reference','testimonial','review','proof','vouch','recommend','clients say'],
-       a:"Happy to share references and examples of past work on request, just email alejandrokeegandev@gmail.com."},
-      {k:['bot like this','want a bot','this bot','chatbot','chat bot','bot for','a widget','own bot','get this bot','like this one','who made this','built this bot','this assistant'],
-       a:"Yes! This assistant is something I build and can drop into your site: a free FAQ bubble like this, or a smarter AI version trained on your business. Email alejandrokeegandev@gmail.com and I'll set you up."},
-      {k:['who is alex','who am i','about alex','tell me about alex'],
-       a:"I'm Alex Keegan, a senior Shopify and headless developer based in Bali, building fast, high-converting stores for brands worldwide."},
-      {k:['nova','who are you','about you','what is this','your name','tell me about yourself'],
-       a:"I'm Nova, Alex Keegan's assistant. I can help with questions about Alex's work, stack, availability, pricing, timelines, and services."},
-      {k:['hello',' hi ',' hey ','good morning','good afternoon','good evening',' yo ','howdy','greetings'],
-       a:"Hey! Ask me about my stack, availability, work, pricing, or building a store."},
-      {k:['thanks','thank you','cheers','appreciate',' bye','goodbye','see you','later'],
+      {id:"new-builds",
+       label:"new store builds",
+       k:["new store","new website","new site","build a store","build my store","build my website","build a website","build a shopify store","build a shopify website","create a store","start a store","set up a store","setup a store","store from scratch","website from scratch","store from the ground up","custom ecommerce build","new shopify store","new shopify website","new ecommerce store","build an online store","build my shopify store","build me a website","build me a store","need a shopify store","build my site","build a site"],
+       a:"Yes. Alex builds custom Shopify stores from the ground up, with thoughtful architecture, design implementation and functionality shaped around the brand and its customers. He can also handle the product, payment and app setup needed for launch."},
+      {id:"redesigns",
+       label:"redesigns and migrations",
+       k:["redesign","redesigns","re design","revamp","rebuild","refresh","migrate","migration","migrations","replatform","re platform","existing store","current store","move my store","switch platforms"],
+       q:["can you migrate","can alex migrate","can you redesign","can alex redesign","can you rebuild","can alex rebuild","can you refresh","can alex refresh"],
+       a:"Alex redesigns and rebuilds existing stores, migrates between platforms or themes, and improves speed and conversion. Send the store URL and what you want to change to alejandrokeegandev@gmail.com."},
+      {id:"shopify",
+       label:"Shopify",
+       k:["shopify","liquid","theme","themes","shopify plus","checkout","checkout extensibility","custom app","custom apps","shopify app","shopify apps","metafield","metafields"],
+       a:"Shopify is Alex's home base: Liquid, custom themes, Shopify Plus, checkout extensibility, custom apps and migrations. He builds around the store's requirements, from storefront details to more complex functionality."},
+      {id:"headless",
+       label:"headless storefronts",
+       k:["headless","headless commerce","headless shopify","shopify headless","hydrogen","next.js","nextjs","next js","react","storefront api","vercel","composable","jamstack"],
+       a:"Alex builds headless storefronts with Next.js or Hydrogen, using Shopify's Storefront API. He works across the architecture, React frontend and integrations to create a fast, custom shopping experience."},
+      {id:"stack",
+       label:"technology stack",
+       k:["stack","technology","technologies","skills","framework","frameworks","typescript","graphql","tailwind","coding","programming languages"],
+       q:["stack","technologies","frameworks","programming languages","what tools","which tools","what technology","which technology","what do you use","what does alex use","built with","code in"],
+       a:"Alex works with Shopify, Liquid and the Storefront API, plus Next.js, React, TypeScript, Hydrogen, GraphQL, Tailwind and Vercel for headless builds. He chooses the stack to fit the project."},
+      {id:"integrations",
+       label:"features and integrations",
+       k:["klaviyo","subscription","subscriptions","integrate","integration","integrations","quiz","quizzes","bundle","bundles","loyalty","email flow","email flows","email automation","third party","plugin","plugins","automation","custom features","payment setup","payment gateway"],
+       q:["integrate","integration","integrations","email flow","email flows","email automation","loyalty program","payment setup","payment gateway"],
+       a:"Alex builds custom ecommerce features and third-party integrations, including subscriptions, quizzes, bundles, Klaviyo and APIs. The approach depends on how your store and existing systems need to work together."},
+      {id:"performance",
+       label:"conversion and performance",
+       k:["cro","conversion","conversions","performance","page speed","site speed","store speed","slow store","slow website","slow site","store is slow","site is slow","website is slow","core web vitals","optimize","optimise","optimization","optimisation","more sales","abandoned carts","cart abandonment","load time","loading time","loading slowly","ux"],
+       q:["cro","conversion","conversions","performance","page speed","site speed","store speed","core web vitals","load time","loading time"],
+       a:"Alex focuses on fast load times, clear UX and the details that help visitors buy. He improves Core Web Vitals and shopping flows with performance and conversion in mind."},
+      {id:"availability",
+       label:"availability",
+       k:["available","availability","hire","hiring","full time","part time","contract","freelance","looking for work","taking projects","taking on projects","taking on new projects","work with you","work with alex","work together","join our team"],
+       q:["available","availability","hiring","full time","part time","freelance","hire you","hire alex","work with you","work with alex","work together","taking on projects","taking on new projects","join our team"],
+       a:"Alex is open to full-time, contract roles, and freelance projects. He works remotely with teams worldwide. Email alejandrokeegandev@gmail.com with the role or project you have in mind."},
+      {id:"location",
+       label:"location and timezone",
+       k:["located","location","based","timezone","time zone","bali","indonesia","remote","working hours","time overlap","remotely"],
+       q:["where are you based","where is alex based","where do you live","where does alex live","where are you located","where is alex located","timezone","time zone","working hours","time overlap","timezone overlap"],
+       a:"Alex is based in Bali, Indonesia (UTC+8) and works remotely with teams and brands worldwide. For specific working hours or timezone overlap, check with him directly."},
+      {id:"experience",
+       label:"experience",
+       k:["experience","background","senior","team lead","lead developer","junior","qualifications"],
+       q:["years of experience","how much experience","how long have you been","how long has alex been","how long have you worked","how long has alex worked","how many stores","how many years","how many shopify stores","how many sites","how many websites","experience with"],
+       a:"Alex is a senior Shopify and headless ecommerce developer. He's led development teams and shipped 50+ Shopify stores across wellness, beauty, jewellery and more."},
+      {id:"portfolio",
+       label:"portfolio",
+       k:["portfolio","selected work","past work","previous work","your work","alex s work","recent work","live builds","case study","case studies","project examples","store examples","previous projects","past projects","previous clients","stores you built","stores has alex built","built before","showcase"],
+       q:["portfolio","selected work","past work","previous work","see your work","see alex s work","case study","case studies","project examples","store examples","previous projects","past projects","previous clients","stores you built","stores has alex built","built before","what brands"],
+       a:"Take a look at Selected Work on this site: live builds include Rooted Vitamins, REHAUS, Larsson & Jennings and Plantwell, plus more linked stores."},
+      {id:"timelines",
+       label:"timelines",
+       k:["timeline","timelines","turnaround","deadline","rush","asap","delivery time","two days","2 days"],
+       q:["timeline","timelines","turnaround","deadline","how long","how fast","how quickly","how quick","how soon","delivery time","two days","2 days"],
+       a:"Once the design and scope are ready, Alex can often build a website refresh in around 2 days. Custom Shopify builds, migrations and headless projects can take longer depending on scope. He'll confirm a realistic timeline with you."},
+      {id:"pricing",
+       label:"pricing",
+       k:["price","prices","pricing","cost","costs","budget","quote","rates","hourly","fee","fees","expensive","afford","invoice","deposit"],
+       q:["price","prices","pricing","cost","costs","budget","quote","rates","hourly","how much","what do you charge","what does alex charge","payment terms","engagement structure","cost of","cost to","price of"],
+       x:["shipping cost","shipping costs","cost of shipping","shipping fees","delivery fees"],
+       a:"Pricing depends on scope. Share the project with Alex at alejandrokeegandev@gmail.com and he can provide a clear quote or recommend an engagement structure that fits the work."},
+      {id:"process",
+       label:"process",
+       k:["process","workflow","next steps","next step","kickoff","kick off","onboarding"],
+       q:["process","workflow","how do you work","how does alex work","how does it work","get started","getting started","kickoff","kick off","onboarding","next steps","next step"],
+       a:"Alex starts by understanding the business, goals and scope, then agrees the approach, timeline and engagement. Once the design is ready, he builds, shares progress for feedback, and tests before launch."},
+      {id:"services",
+       label:"services",
+       k:["services","service","specialty","specialties","specialise","specialises","specialize","specializes","specialisation","specialization"],
+       q:["what do you do","what does alex do","what services","which services","what can alex help with","what can you help with","what do you offer","what does alex offer","what can you do","what can alex do","how can alex help me","how can you help me"],
+       a:"Alex develops Shopify and headless storefronts: custom builds, redesigns, migrations, integrations and ongoing improvements. His work combines frontend engineering and architecture with UX, performance and conversion thinking."},
+      {id:"support",
+       label:"ongoing support",
+       k:["support","maintenance","maintain","after launch","ongoing support","retainer","care plan","store updates","manage my store","look after my store"],
+       q:["maintenance","after launch","ongoing support","retainer","care plan","store updates","manage my store","look after my store","ongoing shopify support","store support","do you offer support","does alex offer support","post launch"],
+       a:"Yes. Alex can keep your store maintained and improving after launch, from fixes and updates to new features and performance work. Email alejandrokeegandev@gmail.com to discuss ongoing support."},
+      {id:"why-alex",
+       label:"why hire Alex",
+       k:["why you","why alex","why hire","why work with","stand out"],
+       q:["why hire","why work with","why should i hire","why should we hire","what makes alex different","what makes you different","why choose alex","why choose you","stand out","why hire alex","why hire you","why work with alex","why work with you"],
+       a:"You work directly with a senior developer who sees the wider ecommerce picture. Alex combines development with UX, performance, CRO and design awareness, grounded in the brand, customer and business behind the build."},
+      {id:"industries",
+       label:"industries",
+       k:["industry","industries","niche","sector","sectors","wellness","beauty","skincare","supplement","supplements","jewellery","jewelry","fashion","cosmetics","dtc"],
+       q:["industry","industries","niche","sectors","types of brands","kinds of brands"],
+       a:"Alex has built stores for wellness, beauty, skincare, supplements, jewellery and other DTC brands. He adapts the approach to the product, customers and business."},
+      {id:"contact",
+       label:"contact",
+       k:["contact","email","e mail","linkedin","github","whatsapp","phone number"],
+       q:["contact","email address","e mail address","your email","your e mail","alex s email","alex s e mail","get in touch","how do i reach","how can i reach","reach alex","reach you","talk to alex","talk to you","message alex","message you","book a call","schedule a call","contact alex","contact you"],
+       a:"The easiest way to reach Alex is alejandrokeegandev@gmail.com. His LinkedIn and GitHub are in the footer too."},
+      {id:"cv",
+       label:"CV",
+       k:["cv","resume","curriculum vitae"],
+       q:["cv","resume","curriculum vitae"],
+       a:"Alex's CV is available through the Download CV button on this site. You can also request it at alejandrokeegandev@gmail.com."},
+      {id:"languages",
+       label:"spoken languages",
+       k:["english","spanish","german","spoken languages","speak"],
+       q:["do you speak","does alex speak","spoken languages","what languages do you speak","what languages does alex speak","what language do you speak","what language does alex speak"],
+       a:"Alex is a native Spanish speaker, speaks fluent English and some German. Clear communication from kickoff to launch is a priority for him."},
+      {id:"references",
+       label:"references",
+       k:["reference","references","testimonial","testimonials","vouch"],
+       q:["references","testimonials","client reviews","clients say","client feedback","who can vouch"],
+       a:"Alex can share references and examples of past work on request. Email alejandrokeegandev@gmail.com to ask."},
+      {id:"bots",
+       label:"bots and assistants",
+       k:["chatbot","chatbots","chat bot","bot like this","want a bot","bot for","own bot","get this bot","build a bot","build an assistant","ai assistant","faq assistant","assistant like nova","nova for my","who built nova","who made nova","who built this bot","who made this bot","who made this","who built this assistant","this bot","this assistant"],
+       a:"Alex can build an assistant like Nova directly into a website, from a lightweight FAQ experience to a smarter AI assistant built around the business. Email alejandrokeegandev@gmail.com to discuss yours."},
+      {id:"about-alex",
+       label:"about Alex",
+       k:["who is alex","who s alex","about alex","tell me about alex","who is alex keegan","tell me about alex keegan","about alex keegan","who s alex keegan"],
+       exact:true,
+       a:"Alex Keegan is a senior Shopify and headless ecommerce developer based in Bali. He builds custom storefronts with attention to the technology, shopping experience and business behind them."},
+      {id:"about-nova",
+       label:"about Nova",
+       k:["who are you","who is nova","what is nova","about nova","your name","tell me about yourself","are you ai","are you a bot","are you alex","about you","what is this"],
+       q:["who are you","who is nova","what is nova","about nova","your name","tell me about yourself","are you ai","are you a bot","are you alex","about you"],
+       a:"I'm Nova, Alex Keegan's assistant. I answer FAQs about Alex's work, stack, availability, pricing and services using a set of prepared responses."},
+      {id:"greetings",
+       label:"greetings",
+       k:["hello","hi","hey","hi there","hello there","hey there","hi nova","hello nova","hey nova","good morning","good afternoon","good evening","yo","howdy","greetings","good morning nova","how are you","hi how are you","hey how are you"],
+       exact:true,
+       a:"Hey! Ask me about Alex's stack, availability, work, pricing, or building a store."},
+      {id:"goodbye",
+       label:"thanks and goodbye",
+       k:["thanks","thank you","cheers","thanks nova","thank you nova","thanks for your help","thank you for your help","appreciate it","bye","goodbye","see you","see you later","thanks bye","thanks goodbye"],
+       exact:true,
        a:"Anytime! Reach out at alejandrokeegandev@gmail.com whenever you're ready."}
     ];
-    var FALLBACK="I'm a simple assistant, so I might not have that exact one. I can help with Alex's stack, availability, past work, timelines, pricing, process, or building a store. For anything else, email alejandrokeegandev@gmail.com and he'll get right back to you.";
+    var FALLBACK="I don't have an answer for that one. I can help with Alex's work, services, stack, availability, pricing and timelines. For anything else, email Alex at alejandrokeegandev@gmail.com.";
     var GREETING="Hey, I'm Nova, Alex Keegan's assistant. Ask me about Alex's work, stack, availability, pricing, timelines, or building your store.";
     var CHIPS=[["Want a bot like this?","want a bot like this"],["What's your stack?","stack"],["Available for work?","available"],["See your work","portfolio work"],["How to reach you?","contact email"]];
 
+    function normalizeQuestion(text){
+      return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .replace(/[^a-z0-9]+/g,' ').trim();
+    }
+    // Normalize once. Whole-token matching avoids e.g. "hi" inside "shipping".
+    var FAQ_MATCHERS=KB.map(function(entry){
+      return {entry:entry,exclude:(entry.x||[]).map(normalizeQuestion),phrases:entry.k.map(function(phrase){return {text:normalizeQuestion(phrase),intent:false};})
+        .concat((entry.q||[]).map(function(phrase){return {text:normalizeQuestion(phrase),intent:true};}))};
+    });
+    function matchQuestion(text){
+      var original=normalizeQuestion(text), question=original;
+      // Ignore a conversational salutation only when a question follows it.
+      question=question.replace(/^(?:hi|hello|hey|good morning|good afternoon|good evening)(?: nova)? +(?=.+)/,'');
+      var padded=' '+question+' ', matches=[], bestScore=0;
+      if(!question) return matches;
+      FAQ_MATCHERS.forEach(function(item){
+        if(item.exclude.some(function(phrase){return padded.indexOf(' '+phrase+' ')!==-1;})) return;
+        var score=0;
+        item.phrases.forEach(function(phrase){
+          var found=item.entry.exact ? (question===phrase.text || original===phrase.text) : padded.indexOf(' '+phrase.text+' ')!==-1;
+          // Use the strongest phrase, not overlapping/repeated keyword counts.
+          var weight=(phrase.intent ? 100 : 0)+phrase.text.split(' ').length;
+          if(found) score=Math.max(score,weight);
+        });
+        if(score>bestScore){bestScore=score;matches=[item.entry];}
+        else if(score && score===bestScore){matches.push(item.entry);}
+      });
+      return matches;
+    }
     function answer(text){
-      var t=(' '+text.toLowerCase()+' '), best=null, score=0;
-      KB.forEach(function(e){ var s=0; e.k.forEach(function(w){ if(t.indexOf(w)>-1) s++; }); if(s>score){score=s;best=e;} });
-      return score>0 ? best.a : FALLBACK;
+      var matches=matchQuestion(text);
+      if(!matches.length) return FALLBACK;
+      if(matches.length===1) return matches[0].a;
+      return "Are you asking about "+matches.map(function(entry){return entry.label;}).join(' or ')+"? Ask about one at a time and I'll help.";
     }
     function addMsg(text,who){ var m=document.createElement('div'); m.className='cbot-msg '+who; m.textContent=text;
       body.appendChild(m); body.scrollTop=body.scrollHeight; return m; }

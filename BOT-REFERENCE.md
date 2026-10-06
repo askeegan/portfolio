@@ -1,25 +1,28 @@
-# Bot questions, keywords and answers
+# Nova questions, triggers and answers
 
-Extracted from index.html. All answers and trigger phrases below are exact current values.
+Reference for the current implementation in index.html. All 27 FAQ categories, answers, trigger phrases, the greeting, fallback and five quick questions below match the source. Nova uses local, prepared responses; it does not call an AI service.
 
 ## Variables
 
 | Variable | Purpose |
 | --- | --- |
 | `KB` | Array of 27 FAQ entries. |
-| `k` | Trigger keywords and phrases for an entry. |
-| `a` | Answer for that entry. |
+| `id`, `label` | Stable category ID for tests and readable topic for clarification. |
+| `k` | Whole-word topic keywords and phrases. |
+| `q` | Optional explicit question-intent phrases with higher priority. |
+| `x` | Optional phrases that exclude an entry (currently shipping costs versus developer pricing). |
+| `exact` | Require a whole-message match; used for About Alex, greetings and thanks/goodbye. |
+| `a` | Prepared answer. |
 | `GREETING` | Initial message on first opening. |
-| `FALLBACK` | Answer when no keywords match. |
-| `CHIPS` | Five pairs of button label and matching input. |
+| `FALLBACK` | Response when nothing matches, including Alex's email. |
+| `CHIPS` | Five pairs of button label and matching input; unchanged. |
+| `FAQ_MATCHERS` | Normalized phrases cached once at initialization. |
+| `original`, `question`, `padded` | Normalized input, input without a leading salutation, and space-padded input for word boundaries. |
+| `entry`, `item`, `phrase` | FAQ entry, its compiled matcher, and the current phrase. |
+| `found`, `weight`, `score` | Whether a phrase matches, its relevance, and the entry's strongest relevance. |
+| `matches`, `bestScore` | All entries tied at the highest positive score, and that score. |
 | `started` | Tracks whether greeting and buttons have been initialized. |
 | `text` | User message or quick-button matching input. |
-| `t` | Lowercase message padded with spaces. |
-| `best` | Highest-scoring FAQ entry. |
-| `score` | Highest match count. |
-| `e` | FAQ entry being checked. |
-| `s` | Match count for that entry. |
-| `w` | Trigger phrase being checked. |
 | `who` | Message role (`bot` or `user`). |
 | `m` | Message DOM element. |
 | `c` | Quick-button label/input pair. |
@@ -37,7 +40,14 @@ Extracted from index.html. All answers and trigger phrases below are exact curre
 
 ## Matching behavior
 
-Each matching phrase in `k` adds one point. The entry with the most matching phrases supplies `a`. Ties select the earlier entry in `KB`. No match supplies `FALLBACK`. Matching uses substrings, rather than semantic understanding or exact question matching. Responses appear after 280 ms.
+- Lowercase and normalize accents, punctuation, apostrophes, hyphens and whitespace. Match complete tokens/phrases, never fragments of unrelated words.
+- A leading salutation such as "Hi Nova," is ignored when matching the question. Whole-message entries also check the original normalized input, so standalone greetings still work.
+- A topic phrase scores its word count. An explicit question-intent phrase scores 100 plus its word count. Thus the question being asked can outrank an incidental technology or subject.
+- Use only the strongest phrase per category. Repeated words and overlapping synonyms do not inflate scores.
+- Excluded phrases prevent known unrelated uses from matching an entry. Developer pricing excludes shipping-cost questions.
+- A unique highest score supplies that category's answer. Ties ask which of the named topics the visitor means; they never silently select the first category. No match supplies the fallback.
+- Greetings and farewells match whole messages, so "Hello, what is the weather?" uses the fallback, rather than hiding the unanswered question with a greeting.
+- This is a lightweight phrase matcher, not semantic understanding or conversation memory. Unusual wording and multiple intents may need rephrasing. Responses still appear after 280 ms.
 
 ## Greeting
 
@@ -45,108 +55,151 @@ Hey, I'm Nova, Alex Keegan's assistant. Ask me about Alex's work, stack, availab
 
 ## Fallback
 
-I'm a simple assistant, so I might not have that exact one. I can help with Alex's stack, availability, past work, timelines, pricing, process, or building a store. For anything else, email alejandrokeegandev@gmail.com and he'll get right back to you.
+I don't have an answer for that one. I can help with Alex's work, services, stack, availability, pricing and timelines. For anything else, email Alex at alejandrokeegandev@gmail.com.
 
 ## Quick-question buttons
 
 | Button label | Matching input | Current answer topic |
 | --- | --- | --- |
-| Want a bot like this? | `want a bot like this` | Bots and assistants |
-| What's your stack? | `stack` | Technology stack |
-| Available for work? | `available` | Availability |
-| See your work | `portfolio work` | Portfolio |
-| How to reach you? | `contact email` | Contact |
+| Want a bot like this? | `want a bot like this` | bots and assistants |
+| What's your stack? | `stack` | technology stack |
+| Available for work? | `available` | availability |
+| See your work | `portfolio work` | portfolio |
+| How to reach you? | `contact email` | contact |
+
+## Verification
+
+Run `node tests/nova.test.cjs` using Node's built-in modules; no dependencies are needed. The tests extract and execute the actual inline knowledge base and matching functions. They cover all 27 categories, natural questions, known collisions, unknown questions, both the label and input of each quick button, JavaScript syntax and CSP hashes.
+
+Intentionally ambiguous examples: "Pricing and timelines?" asks the visitor to choose timelines or pricing; "Shopify or React?" asks them to choose Shopify or headless storefronts. These are clarification responses, not extra FAQ categories.
 
 ## 1. New store builds
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `new-builds`
+
+Topic phrases (`k`):
 
 ```json
 [
-  "from scratch",
-  "build my",
-  "build a store",
-  "build me",
-  "can you build",
-  "can alex build",
-  "help me build",
-  "need a store",
   "new store",
-  "new site",
   "new website",
-  "create my",
+  "new site",
+  "build a store",
+  "build my store",
+  "build my website",
+  "build a website",
+  "build a shopify store",
+  "build a shopify website",
   "create a store",
-  "make me a store",
+  "start a store",
   "set up a store",
   "setup a store",
-  "ground up",
-  "start a store",
-  "get a store"
+  "store from scratch",
+  "website from scratch",
+  "store from the ground up",
+  "custom ecommerce build",
+  "new shopify store",
+  "new shopify website",
+  "new ecommerce store",
+  "build an online store",
+  "build my shopify store",
+  "build me a website",
+  "build me a store",
+  "need a shopify store",
+  "build my site",
+  "build a site"
 ]
 ```
 
 Answer:
 
-Absolutely. I build Shopify stores end to end, from a blank slate to launch: design, build, product setup, payments, apps and go-live. Tell me about yours at alejandrokeegandev@gmail.com.
+Yes. Alex builds custom Shopify stores from the ground up, with thoughtful architecture, design implementation and functionality shaped around the brand and its customers. He can also handle the product, payment and app setup needed for launch.
 
 ## 2. Redesigns and migrations
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `redesigns`
+
+Topic phrases (`k`):
 
 ```json
 [
   "redesign",
-  "re-design",
+  "redesigns",
+  "re design",
   "revamp",
   "rebuild",
-  "refresh my",
-  "fix my",
-  "improve my",
-  "update my",
+  "refresh",
   "migrate",
   "migration",
+  "migrations",
   "replatform",
-  "re-platform",
-  "move my",
+  "re platform",
   "existing store",
   "current store",
-  "already have"
+  "move my store",
+  "switch platforms"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "can you migrate",
+  "can alex migrate",
+  "can you redesign",
+  "can alex redesign",
+  "can you rebuild",
+  "can alex rebuild",
+  "can you refresh",
+  "can alex refresh"
 ]
 ```
 
 Answer:
 
-Yes. I redesign and rebuild existing stores, migrate between platforms or themes, and tune them for speed and conversion. Send me the URL at alejandrokeegandev@gmail.com and I'll take a look.
+Alex redesigns and rebuilds existing stores, migrates between platforms or themes, and improves speed and conversion. Send the store URL and what you want to change to alejandrokeegandev@gmail.com.
 
 ## 3. Shopify
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `shopify`
+
+Topic phrases (`k`):
 
 ```json
 [
   "shopify",
   "liquid",
-  " theme",
+  "theme",
+  "themes",
   "shopify plus",
-  " plus",
   "checkout",
+  "checkout extensibility",
   "custom app",
+  "custom apps",
   "shopify app",
-  "metafield"
+  "shopify apps",
+  "metafield",
+  "metafields"
 ]
 ```
 
 Answer:
 
-Yes, Shopify is home base: custom themes, Shopify Plus, checkout extensibility, custom apps and migrations. Whatever you need built, I can handle it.
+Shopify is Alex's home base: Liquid, custom themes, Shopify Plus, checkout extensibility, custom apps and migrations. He builds around the store's requirements, from storefront details to more complex functionality.
 
 ## 4. Headless storefronts
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `headless`
+
+Topic phrases (`k`):
 
 ```json
 [
   "headless",
+  "headless commerce",
+  "headless shopify",
+  "shopify headless",
   "hydrogen",
   "next.js",
   "nextjs",
@@ -161,125 +214,222 @@ Trigger phrases (JSON preserves intentional spaces):
 
 Answer:
 
-Yes, I build headless storefronts with Next.js or Hydrogen on the Shopify Storefront API, deployed on Vercel. Fast, modern and fully custom.
+Alex builds headless storefronts with Next.js or Hydrogen, using Shopify's Storefront API. He works across the architecture, React frontend and integrations to create a fast, custom shopping experience.
 
 ## 5. Technology stack
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `stack`
+
+Topic phrases (`k`):
 
 ```json
 [
   "stack",
-  " tech",
-  "technolog",
-  "skill",
-  " tool",
+  "technology",
+  "technologies",
+  "skills",
   "framework",
-  "what do you use",
-  "built with",
-  "work with",
+  "frameworks",
+  "typescript",
+  "graphql",
+  "tailwind",
   "coding",
-  "code in",
-  "program"
+  "programming languages"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "stack",
+  "technologies",
+  "frameworks",
+  "programming languages",
+  "what tools",
+  "which tools",
+  "what technology",
+  "which technology",
+  "what do you use",
+  "what does alex use",
+  "built with",
+  "code in"
 ]
 ```
 
 Answer:
 
-I work across Shopify (Liquid, Storefront API, checkout extensibility) and headless with Next.js, React, TypeScript, Hydrogen, GraphQL, Tailwind and Vercel.
+Alex works with Shopify, Liquid and the Storefront API, plus Next.js, React, TypeScript, Hydrogen, GraphQL, Tailwind and Vercel for headless builds. He chooses the stack to fit the project.
 
 ## 6. Features and integrations
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `integrations`
+
+Topic phrases (`k`):
 
 ```json
 [
   "klaviyo",
   "subscription",
-  "integrat",
-  " api ",
+  "subscriptions",
+  "integrate",
+  "integration",
+  "integrations",
   "quiz",
+  "quizzes",
   "bundle",
+  "bundles",
   "loyalty",
   "email flow",
+  "email flows",
+  "email automation",
   "third party",
-  "third-party",
   "plugin",
+  "plugins",
   "automation",
-  " apps"
+  "custom features",
+  "payment setup",
+  "payment gateway"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "integrate",
+  "integration",
+  "integrations",
+  "email flow",
+  "email flows",
+  "email automation",
+  "loyalty program",
+  "payment setup",
+  "payment gateway"
 ]
 ```
 
 Answer:
 
-Yes, I build custom features and integrations: subscriptions, quizzes, bundles, Klaviyo and email flows, and third-party APIs. Tell me what you need.
+Alex builds custom ecommerce features and third-party integrations, including subscriptions, quizzes, bundles, Klaviyo and APIs. The approach depends on how your store and existing systems need to work together.
 
 ## 7. Conversion and performance
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `performance`
+
+Topic phrases (`k`):
 
 ```json
 [
   "cro",
   "conversion",
-  "convert",
+  "conversions",
   "performance",
-  " speed",
-  "slow",
-  "faster",
-  "quicker",
   "page speed",
+  "site speed",
+  "store speed",
+  "slow store",
+  "slow website",
+  "slow site",
+  "store is slow",
+  "site is slow",
+  "website is slow",
   "core web vitals",
-  "optimi",
+  "optimize",
+  "optimise",
+  "optimization",
+  "optimisation",
   "more sales",
-  "abandon",
+  "abandoned carts",
+  "cart abandonment",
   "load time",
-  "loading"
+  "loading time",
+  "loading slowly",
+  "ux"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "cro",
+  "conversion",
+  "conversions",
+  "performance",
+  "page speed",
+  "site speed",
+  "store speed",
+  "core web vitals",
+  "load time",
+  "loading time"
 ]
 ```
 
 Answer:
 
-Big focus for me. I build for conversion and speed: clean UX, fast load times, strong Core Web Vitals, and the details that turn visits into sales.
+Alex focuses on fast load times, clear UX and the details that help visitors buy. He improves Core Web Vitals and shopping flows with performance and conversion in mind.
 
 ## 8. Availability
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `availability`
+
+Topic phrases (`k`):
 
 ```json
 [
   "available",
-  "availab",
+  "availability",
   "hire",
   "hiring",
-  "open to",
-  "looking for work",
-  "for a job",
-  " job",
-  "full-time",
   "full time",
-  "part-time",
+  "part time",
   "contract",
   "freelance",
+  "looking for work",
+  "taking projects",
+  "taking on projects",
+  "taking on new projects",
   "work with you",
+  "work with alex",
   "work together",
-  "take on",
-  "capacity",
-  "onboard"
+  "join our team"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "available",
+  "availability",
+  "hiring",
+  "full time",
+  "part time",
+  "freelance",
+  "hire you",
+  "hire alex",
+  "work with you",
+  "work with alex",
+  "work together",
+  "taking on projects",
+  "taking on new projects",
+  "join our team"
 ]
 ```
 
 Answer:
 
-I'm open to full-time and contract roles, plus freelance projects. Based in Bali (UTC+8), working worldwide. Email alejandrokeegandev@gmail.com to start.
+Alex is open to full-time, contract roles, and freelance projects. He works remotely with teams worldwide. Email alejandrokeegandev@gmail.com with the role or project you have in mind.
 
 ## 9. Location and timezone
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `location`
+
+Topic phrases (`k`):
 
 ```json
 [
-  "where",
   "located",
   "location",
   "based",
@@ -288,175 +438,332 @@ Trigger phrases (JSON preserves intentional spaces):
   "bali",
   "indonesia",
   "remote",
-  "what country",
-  " hours",
-  "overlap"
+  "working hours",
+  "time overlap",
+  "remotely"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "where are you based",
+  "where is alex based",
+  "where do you live",
+  "where does alex live",
+  "where are you located",
+  "where is alex located",
+  "timezone",
+  "time zone",
+  "working hours",
+  "time overlap",
+  "timezone overlap"
 ]
 ```
 
 Answer:
 
-I'm based in Bali, Indonesia (UTC+8) and work fully remote with teams and brands worldwide.
+Alex is based in Bali, Indonesia (UTC+8) and works remotely with teams and brands worldwide. For specific working hours or timezone overlap, check with him directly.
 
 ## 10. Experience
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `experience`
+
+Topic phrases (`k`):
 
 ```json
 [
   "experience",
-  "years",
   "background",
   "senior",
   "team lead",
-  " lead",
-  "how long have",
-  "expert",
-  " level",
+  "lead developer",
   "junior",
-  "qualified",
-  "how good"
+  "qualifications"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "years of experience",
+  "how much experience",
+  "how long have you been",
+  "how long has alex been",
+  "how long have you worked",
+  "how long has alex worked",
+  "how many stores",
+  "how many years",
+  "how many shopify stores",
+  "how many sites",
+  "how many websites",
+  "experience with"
 ]
 ```
 
 Answer:
 
-I'm a senior / lead developer: I've led development teams and shipped 50+ Shopify stores across wellness, beauty, jewellery and more.
+Alex is a senior Shopify and headless ecommerce developer. He's led development teams and shipped 50+ Shopify stores across wellness, beauty, jewellery and more.
 
 ## 11. Portfolio
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `portfolio`
+
+Topic phrases (`k`):
 
 ```json
 [
-  " work",
   "portfolio",
-  "project",
-  "example",
-  " site",
-  "case stud",
-  "built before",
-  "clients",
-  "brands",
-  "showcase",
-  "previous",
+  "selected work",
   "past work",
-  "see your"
+  "previous work",
+  "your work",
+  "alex s work",
+  "recent work",
+  "live builds",
+  "case study",
+  "case studies",
+  "project examples",
+  "store examples",
+  "previous projects",
+  "past projects",
+  "previous clients",
+  "stores you built",
+  "stores has alex built",
+  "built before",
+  "showcase"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "portfolio",
+  "selected work",
+  "past work",
+  "previous work",
+  "see your work",
+  "see alex s work",
+  "case study",
+  "case studies",
+  "project examples",
+  "store examples",
+  "previous projects",
+  "past projects",
+  "previous clients",
+  "stores you built",
+  "stores has alex built",
+  "built before",
+  "what brands"
 ]
 ```
 
 Answer:
 
-Take a look at Selected Work above: live builds include Rooted Vitamins, REHAUS, Larsson & Jennings and Plantwell, plus more linked stores.
+Take a look at Selected Work on this site: live builds include Rooted Vitamins, REHAUS, Larsson & Jennings and Plantwell, plus more linked stores.
 
 ## 12. Timelines
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `timelines`
+
+Topic phrases (`k`):
 
 ```json
 [
-  "how long",
   "timeline",
+  "timelines",
   "turnaround",
-  "how fast",
-  "how quick",
-  "how soon",
-  " days",
-  " weeks",
   "deadline",
   "rush",
   "asap",
-  "when can",
-  "delivery time"
+  "delivery time",
+  "two days",
+  "2 days"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "timeline",
+  "timelines",
+  "turnaround",
+  "deadline",
+  "how long",
+  "how fast",
+  "how quickly",
+  "how quick",
+  "how soon",
+  "delivery time",
+  "two days",
+  "2 days"
 ]
 ```
 
 Answer:
 
-Once scope and design are set, I can build and launch a full store in about 2 days. Larger custom builds take longer, and I quote that up front.
+Once the design and scope are ready, Alex can often build a website refresh in around 2 days. Custom Shopify builds, migrations and headless projects can take longer depending on scope. He'll confirm a realistic timeline with you.
 
 ## 13. Pricing
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `pricing`
+
+Topic phrases (`k`):
 
 ```json
 [
-  " rate",
   "price",
+  "prices",
   "pricing",
   "cost",
-  "how much",
+  "costs",
   "budget",
   "quote",
-  "charge",
-  " fee",
+  "rates",
+  "hourly",
+  "fee",
+  "fees",
   "expensive",
   "afford",
-  "payment",
-  " pay ",
   "invoice",
   "deposit"
 ]
 ```
 
+Question-intent phrases (`q`):
+
+```json
+[
+  "price",
+  "prices",
+  "pricing",
+  "cost",
+  "costs",
+  "budget",
+  "quote",
+  "rates",
+  "hourly",
+  "how much",
+  "what do you charge",
+  "what does alex charge",
+  "payment terms",
+  "engagement structure",
+  "cost of",
+  "cost to",
+  "price of"
+]
+```
+
+Excluded phrases (`x`):
+
+```json
+[
+  "shipping cost",
+  "shipping costs",
+  "cost of shipping",
+  "shipping fees",
+  "delivery fees"
+]
+```
+
 Answer:
 
-It depends on scope. Share what you need at alejandrokeegandev@gmail.com and I'll send a clear, fixed quote. No hourly surprises.
+Pricing depends on scope. Share the project with Alex at alejandrokeegandev@gmail.com and he can provide a clear quote or recommend an engagement structure that fits the work.
 
 ## 14. Process
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `process`
+
+Topic phrases (`k`):
 
 ```json
 [
   "process",
-  "how do you work",
-  "how does it work",
-  "what happens",
-  "steps",
   "workflow",
+  "next steps",
   "next step",
+  "kickoff",
+  "kick off",
+  "onboarding"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "process",
+  "workflow",
+  "how do you work",
+  "how does alex work",
+  "how does it work",
   "get started",
   "getting started",
-  "begin",
-  "kick off",
   "kickoff",
+  "kick off",
   "onboarding",
-  "how do we"
+  "next steps",
+  "next step"
 ]
 ```
 
 Answer:
 
-Simple: we scope the project and lock the price, I get the design ready, then build and launch. You review a live store before go-live.
+Alex starts by understanding the business, goals and scope, then agrees the approach, timeline and engagement. Once the design is ready, he builds, shares progress for feedback, and tests before launch.
 
 ## 15. Services
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `services`
+
+Topic phrases (`k`):
+
+```json
+[
+  "services",
+  "service",
+  "specialty",
+  "specialties",
+  "specialise",
+  "specialises",
+  "specialize",
+  "specializes",
+  "specialisation",
+  "specialization"
+]
+```
+
+Question-intent phrases (`q`):
 
 ```json
 [
   "what do you do",
-  "services",
-  "service",
-  "what can you",
-  "what else",
-  "offer",
-  "help with",
-  "do you do",
-  "specialt",
-  "specialis",
-  "specializ"
+  "what does alex do",
+  "what services",
+  "which services",
+  "what can alex help with",
+  "what can you help with",
+  "what do you offer",
+  "what does alex offer",
+  "what can you do",
+  "what can alex do",
+  "how can alex help me",
+  "how can you help me"
 ]
 ```
 
 Answer:
 
-I design and build Shopify and headless storefronts end to end: new builds, redesigns, migrations, CRO and performance, custom apps and ongoing care.
+Alex develops Shopify and headless storefronts: custom builds, redesigns, migrations, integrations and ongoing improvements. His work combines frontend engineering and architecture with UX, performance and conversion thinking.
 
 ## 16. Ongoing support
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `support`
+
+Topic phrases (`k`):
 
 ```json
 [
@@ -464,23 +771,44 @@ Trigger phrases (JSON preserves intentional spaces):
   "maintenance",
   "maintain",
   "after launch",
-  "ongoing",
+  "ongoing support",
   "retainer",
-  "look after",
-  "updates",
-  "manage my",
   "care plan",
-  "keep it"
+  "store updates",
+  "manage my store",
+  "look after my store"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "maintenance",
+  "after launch",
+  "ongoing support",
+  "retainer",
+  "care plan",
+  "store updates",
+  "manage my store",
+  "look after my store",
+  "ongoing shopify support",
+  "store support",
+  "do you offer support",
+  "does alex offer support",
+  "post launch"
 ]
 ```
 
 Answer:
 
-Yes, I can keep your store fast, fixed and improving after launch. Email alejandrokeegandev@gmail.com and we'll set up a care plan.
+Yes. Alex can keep your store maintained and improving after launch, from fixes and updates to new features and performance work. Email alejandrokeegandev@gmail.com to discuss ongoing support.
 
 ## 17. Why hire Alex
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `why-alex`
+
+Topic phrases (`k`):
 
 ```json
 [
@@ -488,216 +816,388 @@ Trigger phrases (JSON preserves intentional spaces):
   "why alex",
   "why hire",
   "why work with",
-  "what makes",
-  "different",
-  "better than",
+  "stand out"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "why hire",
+  "why work with",
+  "why should i hire",
+  "why should we hire",
+  "what makes alex different",
+  "what makes you different",
+  "why choose alex",
+  "why choose you",
   "stand out",
-  "special about",
-  "why should"
+  "why hire alex",
+  "why hire you",
+  "why work with alex",
+  "why work with you"
 ]
 ```
 
 Answer:
 
-You deal directly with the senior developer writing the code, not an agency middle layer. Fast, senior builds, clear pricing, and a real focus on conversion.
+You work directly with a senior developer who sees the wider ecommerce picture. Alex combines development with UX, performance, CRO and design awareness, grounded in the brand, customer and business behind the build.
 
 ## 18. Industries
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `industries`
+
+Topic phrases (`k`):
 
 ```json
 [
-  "industr",
+  "industry",
+  "industries",
   "niche",
   "sector",
+  "sectors",
   "wellness",
   "beauty",
   "skincare",
   "supplement",
-  "jewel",
+  "supplements",
+  "jewellery",
+  "jewelry",
   "fashion",
-  "cosmetic",
-  "ecommerce",
-  "e-commerce",
-  " dtc",
-  "what brands",
-  "my industry"
+  "cosmetics",
+  "dtc"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "industry",
+  "industries",
+  "niche",
+  "sectors",
+  "types of brands",
+  "kinds of brands"
 ]
 ```
 
 Answer:
 
-I've built across wellness, beauty, skincare, supplements, jewellery and other DTC brands. The approach works for most product-based stores.
+Alex has built stores for wellness, beauty, skincare, supplements, jewellery and other DTC brands. He adapts the approach to the product, customers and business.
 
 ## 19. Contact
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `contact`
+
+Topic phrases (`k`):
 
 ```json
 [
   "contact",
   "email",
-  "reach",
-  "get in touch",
-  "talk to",
-  "message you",
-  "connect",
-  "hire you",
-  " call",
+  "e mail",
+  "linkedin",
+  "github",
   "whatsapp",
-  "how do i reach",
-  "your email"
+  "phone number"
 ]
 ```
 
-Answer:
-
-Easiest is email: alejandrokeegandev@gmail.com. My LinkedIn and GitHub are in the footer too.
-
-## 20. CV
-
-Trigger phrases (JSON preserves intentional spaces):
+Question-intent phrases (`q`):
 
 ```json
 [
-  " cv",
-  "resume",
-  "curriculum"
+  "contact",
+  "email address",
+  "e mail address",
+  "your email",
+  "your e mail",
+  "alex s email",
+  "alex s e mail",
+  "get in touch",
+  "how do i reach",
+  "how can i reach",
+  "reach alex",
+  "reach you",
+  "talk to alex",
+  "talk to you",
+  "message alex",
+  "message you",
+  "book a call",
+  "schedule a call",
+  "contact alex",
+  "contact you"
 ]
 ```
 
 Answer:
 
-Happy to share my CV, just email alejandrokeegandev@gmail.com.
+The easiest way to reach Alex is alejandrokeegandev@gmail.com. His LinkedIn and GitHub are in the footer too.
 
-## 21. Languages
+## 20. CV
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `cv`
+
+Topic phrases (`k`):
+
+```json
+[
+  "cv",
+  "resume",
+  "curriculum vitae"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "cv",
+  "resume",
+  "curriculum vitae"
+]
+```
+
+Answer:
+
+Alex's CV is available through the Download CV button on this site. You can also request it at alejandrokeegandev@gmail.com.
+
+## 21. Spoken languages
+
+ID: `languages`
+
+Topic phrases (`k`):
 
 ```json
 [
   "english",
   "spanish",
+  "german",
+  "spoken languages",
+  "speak"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
   "do you speak",
-  "speak english",
-  " german",
-  "what language",
-  "communicate"
+  "does alex speak",
+  "spoken languages",
+  "what languages do you speak",
+  "what languages does alex speak",
+  "what language do you speak",
+  "what language does alex speak"
 ]
 ```
 
 Answer:
 
-I'm Spanish (native), speak fluent English, and some German. Clear communication from kickoff to launch is a priority for me.
+Alex is a native Spanish speaker, speaks fluent English and some German. Clear communication from kickoff to launch is a priority for him.
 
 ## 22. References
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `references`
+
+Topic phrases (`k`):
 
 ```json
 [
   "reference",
+  "references",
   "testimonial",
-  "review",
-  "proof",
-  "vouch",
-  "recommend",
-  "clients say"
+  "testimonials",
+  "vouch"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "references",
+  "testimonials",
+  "client reviews",
+  "clients say",
+  "client feedback",
+  "who can vouch"
 ]
 ```
 
 Answer:
 
-Happy to share references and examples of past work on request, just email alejandrokeegandev@gmail.com.
+Alex can share references and examples of past work on request. Email alejandrokeegandev@gmail.com to ask.
 
 ## 23. Bots and assistants
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `bots`
+
+Topic phrases (`k`):
 
 ```json
 [
+  "chatbot",
+  "chatbots",
+  "chat bot",
   "bot like this",
   "want a bot",
-  "this bot",
-  "chatbot",
-  "chat bot",
   "bot for",
-  "a widget",
   "own bot",
   "get this bot",
-  "like this one",
+  "build a bot",
+  "build an assistant",
+  "ai assistant",
+  "faq assistant",
+  "assistant like nova",
+  "nova for my",
+  "who built nova",
+  "who made nova",
+  "who built this bot",
+  "who made this bot",
   "who made this",
-  "built this bot",
+  "who built this assistant",
+  "this bot",
   "this assistant"
 ]
 ```
 
 Answer:
 
-Yes! This assistant is something I build and can drop into your site: a free FAQ bubble like this, or a smarter AI version trained on your business. Email alejandrokeegandev@gmail.com and I'll set you up.
+Alex can build an assistant like Nova directly into a website, from a lightweight FAQ experience to a smarter AI assistant built around the business. Email alejandrokeegandev@gmail.com to discuss yours.
 
 ## 24. About Alex
 
-Trigger phrases:
+ID: `about-alex`
 
-```json
-["who is alex", "who am i", "about alex", "tell me about alex"]
-```
-
-Answer:
-
-I'm Alex Keegan, a senior Shopify and headless developer based in Bali, building fast, high-converting stores for brands worldwide.
-
-## 25. About Nova
-
-Trigger phrases:
-
-```json
-["nova", "who are you", "about you", "what is this", "your name", "tell me about yourself"]
-```
-
-Answer:
-
-I'm Nova, Alex Keegan's assistant. I can help with questions about Alex's work, stack, availability, pricing, timelines, and services.
-
-## 26. Greetings
-
-Trigger phrases (JSON preserves intentional spaces):
+Topic phrases (`k`):
 
 ```json
 [
-  "hello",
-  " hi ",
-  " hey ",
-  "good morning",
-  "good afternoon",
-  "good evening",
-  " yo ",
-  "howdy",
-  "greetings"
+  "who is alex",
+  "who s alex",
+  "about alex",
+  "tell me about alex",
+  "who is alex keegan",
+  "tell me about alex keegan",
+  "about alex keegan",
+  "who s alex keegan"
+]
+```
+
+Whole-message matching only (`exact: true`).
+
+Answer:
+
+Alex Keegan is a senior Shopify and headless ecommerce developer based in Bali. He builds custom storefronts with attention to the technology, shopping experience and business behind them.
+
+## 25. About Nova
+
+ID: `about-nova`
+
+Topic phrases (`k`):
+
+```json
+[
+  "who are you",
+  "who is nova",
+  "what is nova",
+  "about nova",
+  "your name",
+  "tell me about yourself",
+  "are you ai",
+  "are you a bot",
+  "are you alex",
+  "about you",
+  "what is this"
+]
+```
+
+Question-intent phrases (`q`):
+
+```json
+[
+  "who are you",
+  "who is nova",
+  "what is nova",
+  "about nova",
+  "your name",
+  "tell me about yourself",
+  "are you ai",
+  "are you a bot",
+  "are you alex",
+  "about you"
 ]
 ```
 
 Answer:
 
-Hey! Ask me about my stack, availability, work, pricing, or building a store.
+I'm Nova, Alex Keegan's assistant. I answer FAQs about Alex's work, stack, availability, pricing and services using a set of prepared responses.
+
+## 26. Greetings
+
+ID: `greetings`
+
+Topic phrases (`k`):
+
+```json
+[
+  "hello",
+  "hi",
+  "hey",
+  "hi there",
+  "hello there",
+  "hey there",
+  "hi nova",
+  "hello nova",
+  "hey nova",
+  "good morning",
+  "good afternoon",
+  "good evening",
+  "yo",
+  "howdy",
+  "greetings",
+  "good morning nova",
+  "how are you",
+  "hi how are you",
+  "hey how are you"
+]
+```
+
+Whole-message matching only (`exact: true`).
+
+Answer:
+
+Hey! Ask me about Alex's stack, availability, work, pricing, or building a store.
 
 ## 27. Thanks and goodbye
 
-Trigger phrases (JSON preserves intentional spaces):
+ID: `goodbye`
+
+Topic phrases (`k`):
 
 ```json
 [
   "thanks",
   "thank you",
   "cheers",
-  "appreciate",
-  " bye",
+  "thanks nova",
+  "thank you nova",
+  "thanks for your help",
+  "thank you for your help",
+  "appreciate it",
+  "bye",
   "goodbye",
   "see you",
-  "later"
+  "see you later",
+  "thanks bye",
+  "thanks goodbye"
 ]
 ```
+
+Whole-message matching only (`exact: true`).
 
 Answer:
 
