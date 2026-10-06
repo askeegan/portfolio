@@ -170,6 +170,12 @@
   .hero-bg::after{content:"";position:absolute;inset:0;
     background:radial-gradient(130% 120% at 50% 40%, transparent 52%, rgba(5,5,4,.4) 78%, var(--ink) 100%);}
   .hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+  /* Decorative media: never expose Safari's native playback UI. */
+  video[data-video]{pointer-events:none;-webkit-appearance:none;}
+  video[data-video]::-webkit-media-controls{display:none!important;-webkit-appearance:none;}
+  video[data-video]::-webkit-media-controls-enclosure{display:none!important;}
+  video[data-video]::-webkit-media-controls-panel{display:none!important;}
+  video[data-video]::-webkit-media-controls-start-playback-button{display:none!important;-webkit-appearance:none;}
   .hero-tint{position:absolute;inset:0;z-index:1;pointer-events:none;
     background:
       radial-gradient(120% 95% at 62% 8%, rgba(224,129,47,.1), transparent 58%),
@@ -977,63 +983,107 @@
 </div>
 
 <script>
-// Media starts independently of the optional Lenis dependency below.
+// Decorative video controller.
+// Native autoplay stays in the markup, but visible videos are also explicitly started.
+// This matters on desktop Safari, where relying on the autoplay attribute alone can leave
+// a muted decorative video in Safari's native start-playback state.
 (function(){
   var motion=window.matchMedia('(prefers-reduced-motion: reduce)');
   var pageLoaded=document.readyState==='complete';
+
   function within(video,margin){
     var r=video.getBoundingClientRect();
-    return r.width>0 && r.height>0 && r.bottom> -margin && r.top<window.innerHeight+margin;
+    return r.width>0 && r.height>0 && r.bottom>-margin && r.top<window.innerHeight+margin;
   }
+
   var states=[].slice.call(document.querySelectorAll('[data-video]')).map(function(video){
-    video.muted=true;video.defaultMuted=true;video.playsInline=true;
-    return {video:video,kind:video.dataset.video,visible:within(video,0),near:within(video,600),active:null};
+    // Set both DOM properties and attributes before any programmatic play attempt.
+    video.muted=true;
+    video.defaultMuted=true;
+    video.playsInline=true;
+    video.autoplay=true;
+    video.loop=true;
+    video.controls=false;
+    video.disablePictureInPicture=true;
+    video.setAttribute('muted','');
+    video.setAttribute('playsinline','');
+    video.setAttribute('webkit-playsinline','');
+    video.setAttribute('autoplay','');
+    video.setAttribute('loop','');
+    video.removeAttribute('controls');
+
+    return {
+      video:video,
+      kind:video.dataset.video,
+      visible:within(video,0),
+      near:within(video,600),
+      active:false
+    };
   });
-  function resume(video){
-    // Only resume a controller-paused video; initial playback belongs to native autoplay.
+
+  function start(video){
+    // A muted inline play() is the explicit Safari path. No gesture fallback and no UI.
     try{
-      var promise=video.play();
-      if(promise && promise.catch) promise.catch(function(){});
+      var p=video.play();
+      if(p && p.catch) p.catch(function(){});
     }catch(error){}
   }
+
   function sync(state){
-    var video=state.video, enabled=!motion.matches && !document.hidden;
+    var video=state.video;
+    var enabled=!motion.matches && !document.hidden;
     var active=enabled && state.visible && (state.kind!=='bubble' || pageLoaded);
-    var added=false;
+
     if(state.kind!=='hero'){
       var prepare=enabled && state.kind==='about' && state.near;
-      if(video.autoplay!==active) video.autoplay=active;
       var preload=active ? 'auto' : prepare ? 'metadata' : 'none';
       if(video.preload!==preload) video.preload=preload;
+
       if((active || prepare) && !video.getAttribute('src')){
-        // Setting the video src starts native loading; no load/reset cycle is needed.
-        video.src=video.dataset.src;added=true;
+        video.src=video.dataset.src;
       }
     }
-    if(state.active===active) return;
-    var wasPaused=state.active===false;
-    state.active=active;
-    if(!active) video.pause();
-    else if(wasPaused && !added) resume(video);
+
+    if(!active){
+      if(state.active || !video.paused) video.pause();
+      state.active=false;
+      return;
+    }
+
+    // Do not rely on a native autoplay event arriving first. Explicitly request playback
+    // whenever the decorative video becomes active, including initial hero load and
+    // immediately after About/Nova receive their deferred source.
+    state.active=true;
+    if(video.paused) start(video);
   }
+
   function syncAll(){states.forEach(sync);}
+
   states.forEach(function(state){
-    // A late native start must still respect reduced motion and offscreen pausing.
     state.video.addEventListener('playing',function(){
       if(!state.active || motion.matches || document.hidden) state.video.pause();
     });
+    // If Safari finishes loading after the first play request, make one idempotent
+    // playback request while the video is still meant to be active.
+    state.video.addEventListener('canplay',function(){
+      if(state.active && state.video.paused) start(state.video);
+    });
   });
+
   if('IntersectionObserver' in window){
     var visibleObserver=new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
-        states.find(function(s){return s.video===entry.target;}).visible=entry.isIntersecting;
+        var state=states.find(function(s){return s.video===entry.target;});
+        if(state) state.visible=entry.isIntersecting;
       });
       syncAll();
     },{threshold:0});
     states.forEach(function(state){visibleObserver.observe(state.video);});
+
     var prepareObserver=new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
-        states.find(function(s){return s.video===entry.target;}).near=entry.isIntersecting;
+        var state=states.find(function(s){return s.video===entry.target;});
+        if(state) state.near=entry.isIntersecting;
       });
       syncAll();
     },{rootMargin:'600px 0px',threshold:0});
@@ -1042,17 +1092,29 @@
     var queued=false;
     function measure(){
       queued=false;
-      states.forEach(function(s){s.visible=within(s.video,0);s.near=within(s.video,600);});
+      states.forEach(function(s){
+        s.visible=within(s.video,0);
+        s.near=within(s.video,600);
+      });
       syncAll();
     }
-    function schedule(){if(!queued){queued=true;requestAnimationFrame(measure);}}
+    function schedule(){
+      if(!queued){
+        queued=true;
+        requestAnimationFrame(measure);
+      }
+    }
     window.addEventListener('scroll',schedule,{passive:true});
     window.addEventListener('resize',schedule);
   }
-  // Nova's small loop waits for page load, independently of other videos' play promises.
-  window.addEventListener('load',function(){pageLoaded=true;syncAll();},{once:true});
+
+  window.addEventListener('load',function(){
+    pageLoaded=true;
+    syncAll();
+  },{once:true});
   motion.addEventListener('change',syncAll);
   document.addEventListener('visibilitychange',syncAll);
+
   syncAll();
 })();
 </script>
