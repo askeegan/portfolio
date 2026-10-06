@@ -4,21 +4,38 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Alex Keegan | Shopify &amp; Headless Developer</title>
-<meta name="description" content="Shopify and headless developer building fast, high-converting storefronts. Explore Alex Keegan’s work, capabilities, and availability.">
+<meta name="description" content="Alex Keegan is a Shopify and headless ecommerce developer building fast, high-converting storefronts for brands worldwide.">
 <link rel="canonical" href="https://alexkeegan.com/">
 <meta property="og:url" content="https://alexkeegan.com/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Alex Keegan | Shopify &amp; Headless Developer">
-<meta property="og:description" content="Shopify and headless developer building fast, high-converting storefronts. Explore Alex Keegan’s work, capabilities, and availability.">
+<meta property="og:description" content="Alex Keegan is a Shopify and headless ecommerce developer building fast, high-converting storefronts for brands worldwide.">
 <meta property="og:image" content="https://alexkeegan.com/img/social-preview.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Alex Keegan — Shopify &amp; Headless Developer">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Alex Keegan | Shopify &amp; Headless Developer">
-<meta name="twitter:description" content="Shopify and headless developer building fast, high-converting storefronts. Explore Alex Keegan’s work, capabilities, and availability.">
+<meta name="twitter:description" content="Alex Keegan is a Shopify and headless ecommerce developer building fast, high-converting storefronts for brands worldwide.">
 <meta name="twitter:image" content="https://alexkeegan.com/img/social-preview.png">
-<link rel="icon" type="image/svg+xml" href="favicon.svg" id="siteFavicon">
+<link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg?v=2">
+<link rel="shortcut icon" href="/favicon.svg?v=2">
+<link rel="mask-icon" href="/favicon.svg?v=2" color="#0A0A0B">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": "https://alexkeegan.com/#alex-keegan",
+  "name": "Alex Keegan",
+  "url": "https://alexkeegan.com/",
+  "jobTitle": "Shopify & Headless Developer",
+  "description": "Shopify and headless ecommerce developer building fast, high-converting storefronts for brands worldwide.",
+  "sameAs": [
+    "https://linkedin.com/in/alejandro-keegan-b342a7253",
+    "https://github.com/askeegan"
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
@@ -170,6 +187,12 @@
   .hero-bg::after{content:"";position:absolute;inset:0;
     background:radial-gradient(130% 120% at 50% 40%, transparent 52%, rgba(5,5,4,.4) 78%, var(--ink) 100%);}
   .hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+  /* Decorative videos never expose native playback UI or intercept clicks. */
+  video[data-video]{pointer-events:none;}
+  video[data-video]::-webkit-media-controls{display:none!important;}
+  video[data-video]::-webkit-media-controls-enclosure{display:none!important;}
+  video[data-video]::-webkit-media-controls-panel{display:none!important;}
+  video[data-video]::-webkit-media-controls-start-playback-button{display:none!important;}
   .hero-tint{position:absolute;inset:0;z-index:1;pointer-events:none;
     background:
       radial-gradient(120% 95% at 62% 8%, rgba(224,129,47,.1), transparent 58%),
@@ -990,37 +1013,67 @@
     var sources=[].slice.call(video.querySelectorAll('source'));
     if(video.dataset.src) sources.push(video);
     return {video:video,kind:video.dataset.video,sources:sources,visible:within(video,0),
-      near:within(video,600),loaded:false,requested:false,attempt:0,played:false,failure:null};
+      near:within(video,600),loaded:false,pending:false,playing:false,attempt:0,played:false,failure:null,
+      interrupted:false,recoveryUsed:false,priorityReleased:false};
   });
-  function primaryWaiting(){
-    return states.some(function(s){return s.kind!=='bubble' && s.visible && !s.played && !s.failure;});
+  function primaryWaiting(forNova){
+    return states.some(function(s){return s.kind!=='bubble' && s.visible && !s.played && !s.failure &&
+      !s.interrupted && !(forNova && s.priorityReleased);});
   }
   function preload(state,value){
     if(state.video.preload!==value) state.video.preload=value;
   }
   function prepare(state,value){
-    preload(state,value);
-    if(state.loaded) return;
     state.video.muted=true;state.video.defaultMuted=true;state.video.playsInline=true;
-    state.sources.forEach(function(source){source.src=source.dataset.src;});
-    state.loaded=true;
-    state.video.load();
+    state.video.controls=false;
+    preload(state,value);
+    var added=!state.loaded;
+    if(added){
+      state.sources.forEach(function(source){source.src=source.dataset.src;});
+      state.loaded=true;
+    }
+    // Arm native autoplay only with a source attached and visible playback approved.
+    if(state.video.autoplay!==(value==='auto')) state.video.autoplay=value==='auto';
+    if(added) state.video.load();
   }
   function pause(state){
-    if(state.requested || !state.video.paused){
-      state.attempt++;state.requested=false;state.video.pause();
+    state.video.autoplay=false;
+    state.interrupted=false;state.recoveryUsed=false;
+    if(state.pending || state.playing || !state.video.paused){
+      state.attempt++;state.pending=false;state.playing=false;state.video.pause();
       state.video.dataset.playbackState='paused';
     }
   }
+  function recover(state,gesture){
+    if(motion.matches || document.hidden || !state.visible || state.pending) return;
+    if(state.failure && !(gesture && state.failure==='NotAllowedError')) return;
+    if(!state.interrupted && state.failure!=='NotAllowedError') return;
+    // At most one automatic recovery per visible session; genuine gestures can try again.
+    if(!gesture && (state.recoveryUsed || state.video.readyState<3)) return;
+    state.interrupted=false;state.failure=null;state.recoveryUsed=true;
+    sync(state);
+  }
+  function interrupted(state){
+    state.attempt++;state.pending=false;state.playing=false;state.interrupted=true;
+    state.video.dataset.playbackState='interrupted';
+    syncAll();recover(state,false);
+  }
+  function playing(state){
+    if(motion.matches || document.hidden || !state.visible){pause(state);return;}
+    if(state.video.paused){interrupted(state);return;}
+    state.pending=false;state.playing=true;state.played=true;state.interrupted=false;state.failure=null;
+    state.video.dataset.playbackState='playing';syncAll();
+  }
   function requestPlay(state){
-    if(state.requested || state.failure) return;
-    state.requested=true;
+    if(state.pending || (state.playing && !state.video.paused) || state.failure || state.interrupted) return;
+    state.pending=true;state.playing=false;
     var attempt=++state.attempt;
     state.video.dataset.playbackState='loading';
     function rejected(error){
       // A visibility change or source removal can cancel an older play promise.
       if(attempt!==state.attempt) return;
-      state.requested=false;state.failure=error && error.name || 'PlaybackError';
+      if(error && error.name==='AbortError'){interrupted(state);return;}
+      state.pending=false;state.playing=false;state.failure=error && error.name || 'PlaybackError';
       state.video.dataset.playbackState=state.failure==='NotAllowedError' ? 'blocked' : 'error';
       syncAll();
     }
@@ -1029,7 +1082,7 @@
       if(promise && promise.then){
         promise.then(function(){
           if(attempt!==state.attempt) return;
-          state.played=true;state.video.dataset.playbackState='playing';syncAll();
+          playing(state);
         },rejected);
       }
     }catch(error){rejected(error);}
@@ -1039,7 +1092,7 @@
       pause(state);preload(state,'none');
       if(state.loaded){
         state.sources.forEach(function(source){source.removeAttribute('src');});
-        state.loaded=false;state.played=false;state.failure=null;state.video.load();
+        state.loaded=false;state.played=false;state.failure=null;state.priorityReleased=false;state.video.load();
       }
       return;
     }
@@ -1051,22 +1104,38 @@
       return;
     }
     // Keep the small Nova loop from competing with a visible primary video's first start.
-    if(state.kind==='bubble' && !state.loaded && primaryWaiting()) return;
+    if(state.kind==='bubble' && !state.loaded && primaryWaiting(true)) return;
     prepare(state,'auto');
     requestPlay(state);
   }
   function syncAll(){states.forEach(sync);}
   function visibility(state,visible){
-    if(visible && !state.visible) state.failure=null;
+    if(visible && !state.visible){
+      // A new visibility session must not bypass a genuine autoplay denial.
+      if(state.failure!=='NotAllowedError') state.failure=null;
+      state.interrupted=false;state.recoveryUsed=false;
+    }
     state.visible=visible;
   }
   states.forEach(function(state){
-    state.video.addEventListener('playing',function(){
+    state.video.addEventListener('playing',function(){playing(state);});
+    state.video.addEventListener('pause',function(){
+      // Ignore our own pauses and stale queued events after playback has resumed.
+      if(!state.video.paused || (!state.pending && !state.playing)) return;
       if(motion.matches || document.hidden || !state.visible){pause(state);return;}
-      state.played=true;state.video.dataset.playbackState='playing';syncAll();
+      interrupted(state);
     });
+    function releasePriority(){
+      if(!state.loaded) return;
+      // Nova need not wait for a play promise once a frame is ready or fetching stops.
+      state.priorityReleased=true;syncAll();
+    }
+    state.video.addEventListener('loadeddata',releasePriority);
+    state.video.addEventListener('canplay',function(){releasePriority();recover(state,false);});
+    state.video.addEventListener('stalled',releasePriority);
+    state.video.addEventListener('suspend',releasePriority);
     state.video.addEventListener('error',function(){
-      state.attempt++;state.requested=false;state.failure='MediaError';
+      state.attempt++;state.pending=false;state.playing=false;state.interrupted=false;state.failure='MediaError';
       state.video.dataset.playbackState='error';syncAll();
     });
   });
@@ -1102,12 +1171,15 @@
   }
   motion.addEventListener('change',syncAll);
   document.addEventListener('visibilitychange',syncAll);
-  // Retry an explicit autoplay denial only in response to a real user gesture.
+  // Autoplay denial requires a gesture; it can also recover an exhausted interruption.
   function gesture(){
     if(motion.matches || document.hidden) return;
     states.forEach(function(state){
-      if(state.visible && state.failure==='NotAllowedError'){state.failure=null;sync(state);}
+      // A quiet, unsettled request must not keep Nova deferred after user interaction.
+      if(state.visible && state.loaded && state.pending) state.priorityReleased=true;
+      recover(state,true);
     });
+    syncAll();
   }
   document.addEventListener('click',gesture);
   document.addEventListener('keydown',gesture);
@@ -1267,35 +1339,6 @@
   window.addEventListener('resize',updateNavHeight);
   setMenu(false);updateNavHeight();
 
-  // Render the favicon using the navbar's loaded Archivo face, weight, width and tracking.
-  function renderBrandFavicon(){
-    var brand=document.querySelector('.brand-ak'), link=document.getElementById('siteFavicon');
-    if(!brand || !link) return;
-    var cs=getComputedStyle(brand), canvas=document.createElement('canvas');
-    canvas.width=canvas.height=256;
-    var ctx=canvas.getContext('2d');
-    if(!ctx) return;
-    var size=180, tracking=parseFloat(cs.letterSpacing)/parseFloat(cs.fontSize)*size;
-    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--ink').trim();
-    ctx.fillRect(0,0,256,256);
-    ctx.font=cs.fontWeight+' '+size+'px '+cs.fontFamily;
-    ctx.fontStretch='expanded';
-    ctx.fontKerning='normal';
-    var a=ctx.measureText('A'), k=ctx.measureText('K');
-    var width=a.width+tracking+k.width;
-    var ascent=Math.max(a.actualBoundingBoxAscent,k.actualBoundingBoxAscent);
-    var descent=Math.max(a.actualBoundingBoxDescent,k.actualBoundingBoxDescent);
-    var scale=Math.min(204/width,204/(ascent+descent));
-    ctx.translate((256-width*scale)/2,(256+(ascent-descent)*scale)/2);
-    ctx.scale(scale,scale);
-    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
-    ctx.fillText('A',0,0);
-    ctx.fillText('K',a.width+tracking,0);
-    link.type='image/png';
-    link.href=canvas.toDataURL('image/png');
-  }
-  if(document.fonts && document.fonts.ready){document.fonts.ready.then(renderBrandFavicon);}
-  else {renderBrandFavicon();}
 
 
   // hero name: split into letters, auto-fit to one full-width line, domino reveal (0 -> 100)
