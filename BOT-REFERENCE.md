@@ -1,6 +1,6 @@
 # Nova questions, triggers and answers
 
-Reference for the current implementation in index.html. All 27 FAQ categories, answers, trigger phrases, the greeting, fallback and five quick questions below match the source. Nova uses local, prepared responses; it does not call an AI service.
+Reference for the current implementation in main.js. All 27 FAQ categories, answers, trigger phrases, the greeting, fallback and five quick questions below match the source. Nova uses local, prepared responses; it does not call an AI service.
 
 ## Variables
 
@@ -69,7 +69,7 @@ I don't have an answer for that one. I can help with Alex's work, services, stac
 
 ## Verification
 
-Run `node tests/nova.test.cjs` using Node's built-in modules; no dependencies are needed. The tests extract and execute the actual inline knowledge base and matching functions. They cover all 27 categories, natural questions, known collisions, unknown questions, both the label and input of each quick button, JavaScript syntax and CSP hashes.
+Run `node tests/nova.test.cjs` using Node's built-in modules; no dependencies are needed. The tests extract and execute the actual knowledge base from main.js and matching functions. They cover all 27 categories, natural questions, known collisions, unknown questions, both the label and input of each quick button, JavaScript syntax and CSP hashes.
 
 Intentionally ambiguous examples: "Pricing and timelines?" asks the visitor to choose timelines or pricing; "Shopify or React?" asks them to choose Shopify or headless storefronts. These are clarification responses, not extra FAQ categories.
 

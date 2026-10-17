@@ -3,14 +3,14 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const crypto = require('node:crypto');
 const root = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const start = html.indexOf('    var KB=[');
-const end = html.indexOf('    function addMsg', start);
+const mainJs = fs.readFileSync(path.join(root, 'main.js'), 'utf8');
+const start = mainJs.indexOf('    var KB=[');
+const end = mainJs.indexOf('    function addMsg', start);
 assert(start !== -1 && end > start, 'Find the actual Nova data and matcher');
 const bot = {};
-vm.runInNewContext(html.slice(start, end), bot);
+vm.runInNewContext(mainJs.slice(start, end), bot);
 
 // Expected category IDs, "fallback", or an explicit list of clarification topics.
 const questions = [
@@ -238,11 +238,9 @@ for (const entry of bot.KB) {
 }
 console.log(`${questions.length} visitor questions + ${bot.CHIPS.length * 2} chip label/input checks: ${failed} failures.`);
 if (failed) process.exitCode = 1;
-// Validate all inline JavaScript and the deployed CSP hashes as part of the same check.
-const csp = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8')).headers[0].headers.find(header => header.key.startsWith('Content-Security-Policy')).value;
+// Validate the site JavaScript files, and that no executable inline script needs a CSP hash.
+for (const file of ['video.js', 'main.js']) new vm.Script(fs.readFileSync(path.join(root, file), 'utf8'));
 for (const [, attrs, source] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)) {
   if (/\bsrc=/.test(attrs) || /type=["']application\/ld\+json["']/.test(attrs) || !source.trim()) continue;
-  new vm.Script(source);
-  const hash = crypto.createHash('sha256').update(source).digest('base64');
-  assert(csp.includes(`'sha256-${hash}'`), 'CSP must match inline JavaScript');
+  assert.fail('Executable inline script found; move it to a file or add its CSP hash');
 }
