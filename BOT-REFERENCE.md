@@ -505,7 +505,7 @@ Question-intent phrases (`q`):
 
 Answer:
 
-Alex is a senior Shopify and headless ecommerce developer. He's led development teams and shipped 50+ Shopify stores across wellness, beauty, jewellery and more.
+Alex is a senior Shopify and headless ecommerce developer. He's led development teams and shipped 50+ Shopify stores last year across wellness, beauty, jewellery and more.
 
 ## 11. Portfolio
 

@@ -241,7 +241,7 @@ if (failed) process.exitCode = 1;
 // Validate all inline JavaScript and the deployed CSP hashes as part of the same check.
 const csp = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8')).headers[0].headers.find(header => header.key.startsWith('Content-Security-Policy')).value;
 for (const [, attrs, source] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)) {
-  if (/\bsrc=/.test(attrs) || !source.trim()) continue;
+  if (/\bsrc=/.test(attrs) || /type=["']application\/ld\+json["']/.test(attrs) || !source.trim()) continue;
   new vm.Script(source);
   const hash = crypto.createHash('sha256').update(source).digest('base64');
   assert(csp.includes(`'sha256-${hash}'`), 'CSP must match inline JavaScript');

@@ -371,11 +371,11 @@
   .wtile-cap .wtile-tag{color:var(--muted);font-size:10.5px;white-space:nowrap;transition:color .25s;}
   .wtile:hover .wtile-cap,.wtile:hover .wtile-cap .wtile-tag{color:var(--accent);}
   /* explicit interlocking placement — one big, one tall rail, varied mediums; gapless */
-  .wtile:nth-child(1){grid-column:1/5;grid-row:1/4;}   /* Rooted    4w x 3h  (large landscape) */
-  .wtile:nth-child(2){grid-column:5/7;grid-row:1/6;}   /* Edition3  2w x 5h  (tall portrait rail) */
+  .wtile:nth-child(1){grid-column:1/5;grid-row:1/4;}   /* L&J       4w x 3h  (large landscape) */
+  .wtile:nth-child(2){grid-column:5/7;grid-row:1/6;}   /* ToYou     2w x 5h  (tall portrait rail) */
   .wtile:nth-child(3){grid-column:1/3;grid-row:4/6;}   /* Jigsaw    2w x 2h */
-  .wtile:nth-child(4){grid-column:3/5;grid-row:4/6;}   /* L&J       2w x 2h */
-  .wtile:nth-child(5){grid-column:1/4;grid-row:6/9;}   /* Plantwell 3w x 3h */
+  .wtile:nth-child(4){grid-column:3/5;grid-row:4/6;}   /* Plantwell 2w x 2h */
+  .wtile:nth-child(5){grid-column:1/4;grid-row:6/9;}   /* Rooted    3w x 3h */
   .wtile:nth-child(6){grid-column:4/7;grid-row:6/9;}   /* REHAUS    3w x 3h */
   @media(max-width:760px){
     .work-grid{display:block;}
@@ -396,12 +396,16 @@
   .mw span{color:var(--faint);transition:.18s;}
   .mw:hover{border-color:var(--amber);color:var(--amber);}
   .mw:hover span{color:var(--amber);}
+  .more-note{font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);
+    line-height:1.8;margin:22px 0 0;}
+  .more-note a{color:var(--fg);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px;transition:color .18s,text-decoration-color .18s;}
+  .more-note a:hover{color:var(--accent);text-decoration-color:var(--accent);}
 
   /* ---------- about / core ---------- */
   .core{text-align:left;}
   .core .big{font-family:var(--font-display);font-weight:500;font-size:clamp(24px,4vw,56px);line-height:1.14;
     letter-spacing:-.02em;word-spacing:-.04em;max-width:none;position:relative;z-index:3;
-    text-align:justify;text-align-last:center;              /* every full line reaches both edges; last line centered */
+    text-align:center;text-wrap:balance;                    /* even word spacing; balanced line lengths */
     margin:clamp(-120px,-8vh,-56px) calc(50% - 50vw) 0;      /* full-bleed + overlap up into the video bottom */
     padding-inline:clamp(16px,2vw,40px);}
   .core .big .mut{color:var(--faint);}
@@ -809,7 +813,7 @@
     </div>
     <div class="stat reveal">
       <div class="stat-num"><span class="numwrap"><span class="ghost" aria-hidden="true">50</span><span class="stat-val" data-to="50">0</span></span><span class="unit">+</span></div>
-      <div class="stat-foot"><div class="stat-label">Stores shipped</div><p class="stat-line">Across wellness, beauty, jewellery, and more.</p></div>
+      <div class="stat-foot"><div class="stat-label">Stores shipped last year</div><p class="stat-line">Across wellness, beauty, jewellery, and more.</p></div>
     </div>
   </div>
 </div></section>
@@ -856,29 +860,29 @@
       <div class="eyebrow px-l"><span class="num">(03)</span> Selected work</div>
       <h2 class="px-l" data-px-delay="0.13">Live builds</h2>
     </div>
-    <div class="work-count px-r"><b>50+ live stores</b><br>Shopify &middot; Headless &middot; CRO</div>
+    <div class="work-count px-r"><b>50+ stores shipped last year</b><br>Shopify &middot; Headless &middot; CRO</div>
   </div>
 
   <div class="work-grid">
-    <a class="wtile" href="https://rootedvitamins.co" target="_blank" rel="noopener">
-      <div class="wtile-img"><img src="img/rooted.jpg" alt="Rooted Vitamins" loading="lazy" width="800" height="600"></div>
-      <div class="wtile-cap"><span class="wtile-name">Rooted Vitamins</span><span class="wtile-tag">Headless &middot; Next.js</span></div>
+    <a class="wtile" href="https://larssonjennings.com" target="_blank" rel="noopener">
+      <div class="wtile-img"><img src="img/lj.jpg" alt="Larsson &amp; Jennings" loading="lazy" width="800" height="600"></div>
+      <div class="wtile-cap"><span class="wtile-name">Larsson &amp; Jennings</span><span class="wtile-tag">Premium brand</span></div>
     </a>
-    <a class="wtile" href="https://edition3.co" target="_blank" rel="noopener">
-      <div class="wtile-img"><img src="img/edition3.jpg" alt="Edition 3" loading="lazy" width="800" height="958"></div>
-      <div class="wtile-cap"><span class="wtile-name">Edition 3</span><span class="wtile-tag">Brand group</span></div>
+    <a class="wtile" href="https://www.toyousnacks.com" target="_blank" rel="noopener">
+      <div class="wtile-img"><img src="img/toyou.jpg" alt="ToYou Snacks" loading="lazy" width="800" height="958"></div>
+      <div class="wtile-cap"><span class="wtile-name">ToYou Snacks</span><span class="wtile-tag">Conversion-first</span></div>
     </a>
     <a class="wtile" href="https://jigsawstudio.com" target="_blank" rel="noopener">
       <div class="wtile-img"><img src="img/jigsaw.jpg" alt="Jigsaw Studio" loading="lazy" width="800" height="958"></div>
       <div class="wtile-cap"><span class="wtile-name">Jigsaw Studio</span><span class="wtile-tag">Growth studio</span></div>
     </a>
-    <a class="wtile" href="https://larssonjennings.com" target="_blank" rel="noopener">
-      <div class="wtile-img"><img src="img/lj.jpg" alt="Larsson &amp; Jennings" loading="lazy" width="800" height="600"></div>
-      <div class="wtile-cap"><span class="wtile-name">Larsson &amp; Jennings</span><span class="wtile-tag">Premium brand</span></div>
-    </a>
     <a class="wtile" href="https://www.plantwell.co" target="_blank" rel="noopener">
       <div class="wtile-img"><img src="img/plantwell.jpg" alt="Plantwell" loading="lazy" width="800" height="500"></div>
       <div class="wtile-cap"><span class="wtile-name">Plantwell</span><span class="wtile-tag">Premium DTC</span></div>
+    </a>
+    <a class="wtile" href="https://rootedvitamins.co" target="_blank" rel="noopener">
+      <div class="wtile-img"><img src="img/rooted.jpg" alt="Rooted Vitamins" loading="lazy" width="800" height="600"></div>
+      <div class="wtile-cap"><span class="wtile-name">Rooted Vitamins</span><span class="wtile-tag">Headless &middot; Next.js</span></div>
     </a>
     <a class="wtile" href="https://rehaus.co" target="_blank" rel="noopener">
       <div class="wtile-img"><img src="img/rehaus.jpg" alt="REHAUS" loading="lazy" width="800" height="600"></div>
@@ -898,7 +902,9 @@
       <a class="mw" href="https://everafterart.com" target="_blank" rel="noopener">Everafter Art <span>↗</span></a>
       <a class="mw" href="https://paauacademy.de" target="_blank" rel="noopener">PAAU Academy <span>↗</span></a>
       <a class="mw" href="https://renucell.com" target="_blank" rel="noopener">Renucell <span>↗</span></a>
+      <a class="mw" href="https://edition3.co" target="_blank" rel="noopener">Edition 3 <span>↗</span></a>
     </div>
+    <p class="more-note">Built or delivered at <a href="https://jigsawstudio.com" target="_blank" rel="noopener">Jigsaw Studio ↗</a></p>
   </div>
 </div></section>
 
@@ -922,11 +928,11 @@
     <h2 class="about-title" id="aboutTitle">Behind the work</h2>
   </div>
   <div class="wrap">
-    <p class="big statement-wave" id="aboutBig">I build Shopify and headless storefronts where design and engineering work as one. By understanding the brand, customer and business behind it, I create experiences that feel intuitive, considered and built to perform.</p>
+    <p class="big statement-wave" id="aboutBig">I've seen great brands lose sales to stores that didn't match the product behind them. By understanding the brand, the customer and the business around it, I build stores that feel intuitive, considered and made to sell.</p>
     <div class="about-body">
       <div class="support">
-        <p><span class="rise-in">With <b>50+ stores shipped</b>, I've built everything from custom Shopify themes to headless storefronts, always balancing strong development with how a store looks, feels and performs.</span></p>
-        <p><span class="rise-in">I work across the whole build, from theme architecture and front-end to headless and the conversion work, so the technical side and the brand side actually line up.</span></p>
+        <p><span class="rise-in">Slow pages, confusing carts, offers that don't land. With <b>50+ stores shipped last year</b>, from custom Shopify themes to headless storefronts, every build starts with how the customer buys, and the design and code follow from there.</span></p>
+        <p><span class="rise-in">From theme architecture and front-end to subscriptions, bundles and the conversion work, I handle the whole build, so the technical side and the brand side line up and the store sells as well as it looks.</span></p>
         <p><span class="rise-in">I'm comfortable leading projects from idea to launch, or joining an existing team and making things better. Based in UTC+8, working with brands worldwide.</span></p>
       </div>
       <figure class="about-me">
@@ -1719,7 +1725,7 @@
        label:"experience",
        k:["experience","background","senior","team lead","lead developer","junior","qualifications"],
        q:["years of experience","how much experience","how long have you been","how long has alex been","how long have you worked","how long has alex worked","how many stores","how many years","how many shopify stores","how many sites","how many websites","experience with"],
-       a:"Alex is a senior Shopify and headless ecommerce developer. He's led development teams and shipped 50+ Shopify stores across wellness, beauty, jewellery and more."},
+       a:"Alex is a senior Shopify and headless ecommerce developer. He's led development teams and shipped 50+ Shopify stores last year across wellness, beauty, jewellery and more."},
       {id:"portfolio",
        label:"portfolio",
        k:["portfolio","selected work","past work","previous work","your work","alex s work","recent work","live builds","case study","case studies","project examples","store examples","previous projects","past projects","previous clients","stores you built","stores has alex built","built before","showcase"],
