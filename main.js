@@ -401,11 +401,14 @@
       var ps=[].slice.call(document.querySelectorAll('#about .support .rise-in'));
       if(!ps.length) return;
       var startBase=0.94, bandW=0.14;   // staircase positions naturally stagger each block
+      var stacked=window.matchMedia('(max-width:700px)');
       ps.forEach(function(el,i){
         var host=el.parentElement, cur=0;
         animateInView(host,function(){
           var r=host.getBoundingClientRect(), vh=window.innerHeight||document.documentElement.clientHeight;
-          var startY=vh*startBase, endY=vh*(startBase-bandW);
+          // Desktop staircase: each block starts as the previous one finishes, whatever the copy length.
+          var shift=(i>0 && !stacked.matches) ? (r.top-ps[0].parentElement.getBoundingClientRect().top)-i*vh*bandW : 0;
+          var startY=vh*startBase+shift, endY=startY-vh*bandW;
           var p=(startY-r.top)/(startY-endY); if(p<0)p=0; else if(p>1)p=1; p=pxEase(p);
           cur+=(p-cur)*0.16;
           el.style.transform='translateY('+((1-cur)*110).toFixed(2)+'%)';
